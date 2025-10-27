@@ -1,22 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  faTrash, 
-  faPlus, 
-  faMinus, 
-  faShoppingBag,
-  faCreditCard,
-  faLock
-} from '@fortawesome/free-solid-svg-icons';
+  Trash2, Plus, Minus, ShoppingBag, CreditCard, Lock,
+  Truck, Tag, Shield
+} from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatPrice } from '../utils/formatPrice';
-import { calculateCartTotal } from '../utils/calculateDiscount';
-import { PaymentMethods, PaymentMethodDetails } from '../components/PaymentMethods';
+import { PaymentMethods } from '../components/PaymentMethods';
 import { PaymentProgress } from '../components/PaymentProgress';
 
 export function Cart() {
-  const { items, total, itemCount, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { items, total, itemCount, updateQuantity, removeFromCart, clearCart, getCartTotal } = useCart();
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
@@ -38,7 +32,6 @@ export function Cart() {
     setIsUpdating(true);
     try {
       removeFromCart(bookId);
-      // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 300));
     } finally {
       setIsUpdating(false);
@@ -68,13 +61,13 @@ export function Cart() {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <FontAwesomeIcon icon={faShoppingBag} className="w-24 h-24 text-gray-300 mx-auto mb-6" />
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Your Cart is Empty</h1>
-          <p className="text-gray-600 mb-8">Looks like you haven't added any books to your cart yet.</p>
+          <div className="text-center">
+            <ShoppingBag className="w-24 h-24 text-gray-300 mx-auto mb-6" />
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Your Cart is Empty</h1>
+            <p className="text-gray-600 mb-8">Looks like you haven't added any books to your cart yet.</p>
             <Link
               to="/books"
-              className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-flex items-center"
+              className="bg-emerald-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-colors inline-flex items-center"
             >
               Start Shopping
             </Link>
@@ -84,10 +77,12 @@ export function Cart() {
     );
   }
 
-  const cartTotal = calculateCartTotal(items);
+  const cartTotal = getCartTotal();
+  const shippingCost = cartTotal.subtotal >= 50 ? 0 : 9.99;
+  const finalTotal = cartTotal.total + shippingCost;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-emerald-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Progress Indicator */}
         <PaymentProgress currentStep={1} className="mb-8" />
@@ -101,7 +96,7 @@ export function Cart() {
             onClick={handleClearCart}
             className="text-red-600 hover:text-red-700 font-medium flex items-center px-4 py-2 rounded-lg hover:bg-red-50 transition-colors"
           >
-            <FontAwesomeIcon icon={faTrash} className="w-4 h-4 mr-2" />
+            <Trash2 className="w-4 h-4 mr-2" />
             Clear Cart
           </button>
         </div>
@@ -116,7 +111,7 @@ export function Cart() {
                   <Link to={`/book/${item.id}`} className="flex-shrink-0 group">
                     <div className="relative overflow-hidden rounded-xl">
                       <img
-                        src={item.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDE1MCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNTAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik03NSAxMDBMNTAgMTI1SDExMEw3NSAxMDBaIiBmaWxsPSIjOUNBM0FGIi8+Cjx0ZXh0IHg9Ijc1IiB5PSIxNDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM2QjcyODAiIGZvbnQtZmFtaWx5PSJzeXN0ZW0tdWkiIGZvbnQtc2l6ZT0iMTIiPkJvb2s8L3RleHQ+Cjwvc3ZnPgo='}
+                        src={item.image}
                         alt={item.title}
                         className="w-24 h-32 object-cover group-hover:scale-105 transition-transform duration-300"
                       />
@@ -127,11 +122,18 @@ export function Cart() {
                   {/* Book Details */}
                   <div className="flex-1 min-w-0">
                     <Link to={`/book/${item.id}`}>
-                      <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                      <h3 className="text-lg font-semibold text-gray-900 hover:text-emerald-600 transition-colors">
                         {item.title}
                       </h3>
                     </Link>
                     <p className="text-gray-600 text-sm mb-2">by {item.author}</p>
+                    
+                    {/* Stock Warning */}
+                    {item.stock && item.quantity >= item.stock && (
+                      <div className="text-sm text-amber-600 mb-2">
+                        Only {item.stock} in stock
+                      </div>
+                    )}
                     
                     {/* Price */}
                     <div className="flex items-center space-x-2 mb-4">
@@ -142,6 +144,9 @@ export function Cart() {
                           </span>
                           <span className="text-sm text-gray-500 line-through">
                             {formatPrice(item.price)}
+                          </span>
+                          <span className="text-sm bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                            -{item.discountPercent}%
                           </span>
                         </>
                       ) : (
@@ -159,17 +164,17 @@ export function Cart() {
                           disabled={isUpdating || item.quantity <= 1}
                           className="p-3 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                          <FontAwesomeIcon icon={faMinus} className="w-4 h-4" />
+                          <Minus className="w-4 h-4" />
                         </button>
                         <span className="px-6 py-3 border-x border-gray-200 min-w-[4rem] text-center font-semibold text-gray-900">
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                          disabled={isUpdating}
+                          disabled={isUpdating || (item.stock && item.quantity >= item.stock)}
                           className="p-3 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                          <FontAwesomeIcon icon={faPlus} className="w-4 h-4" />
+                          <Plus className="w-4 h-4" />
                         </button>
                       </div>
 
@@ -178,7 +183,7 @@ export function Cart() {
                         disabled={isUpdating}
                         className="text-red-600 hover:text-red-700 p-3 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
                       >
-                        <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -212,7 +217,10 @@ export function Cart() {
                   </div>
                   
                   <div className="flex justify-between text-base">
-                    <span className="text-gray-600">Shipping</span>
+                    <span className="text-gray-600 flex items-center">
+                      <Truck className="w-4 h-4 mr-1" />
+                      Shipping
+                    </span>
                     <span className="text-gray-900 font-semibold">
                       {cartTotal.subtotal >= 50 ? (
                         <span className="text-green-600 font-bold">Free</span>
@@ -224,7 +232,10 @@ export function Cart() {
                   
                   {cartTotal.savings > 0 && (
                     <div className="flex justify-between text-base text-green-600">
-                      <span>Discount</span>
+                      <span className="flex items-center">
+                        <Tag className="w-4 h-4 mr-1" />
+                        Discount
+                      </span>
                       <span className="font-bold">-{formatPrice(cartTotal.savings)}</span>
                     </div>
                   )}
@@ -233,15 +244,20 @@ export function Cart() {
                 <div className="border-t-2 border-gray-200 pt-6">
                   <div className="flex justify-between text-xl font-bold text-gray-900">
                     <span>Total</span>
-                    <span className="text-2xl">{formatPrice(cartTotal.total + (cartTotal.subtotal >= 50 ? 0 : 9.99))}</span>
+                    <span className="text-2xl">{formatPrice(finalTotal)}</span>
                   </div>
+                  {cartTotal.subtotal < 50 && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      Add {formatPrice(50 - cartTotal.subtotal)} more for free shipping!
+                    </p>
+                  )}
                 </div>
               </div>
 
               {/* Payment Method Selection */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center">
-                  <FontAwesomeIcon icon={faCreditCard} className="w-4 h-4 mr-2" />
+                  <CreditCard className="w-4 h-4 mr-2" />
                   Payment Method
                 </h3>
                 
@@ -280,9 +296,9 @@ export function Cart() {
               <div className="mt-8 space-y-4">
                 <button
                   onClick={handleProceedToCheckout}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 text-center flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 text-center flex items-center justify-center shadow-lg hover:shadow-xl"
                 >
-                  <FontAwesomeIcon icon={faLock} className="w-5 h-5 mr-3" />
+                  <Lock className="w-5 h-5 mr-3" />
                   Proceed to Checkout
                 </button>
                 
@@ -294,25 +310,11 @@ export function Cart() {
                 </Link>
               </div>
 
-              {/* Promo Code */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-900 mb-2">Promo Code</h3>
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    placeholder="Enter code"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
-                    Apply
-                  </button>
-                </div>
-              </div>
-
               {/* Security Badge */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <div className="flex items-center justify-center text-xs text-gray-500">
-                  <span>🔒 Secure checkout with SSL encryption</span>
+                  <Shield className="w-4 h-4 mr-1" />
+                  <span>Secure checkout with SSL encryption</span>
                 </div>
               </div>
             </div>

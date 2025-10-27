@@ -16,7 +16,7 @@ export function LanguageSwitcher() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors focus:ring-4 focus:ring-blue-300 focus:outline-none rounded-lg"
+        className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-amber-600 transition-colors focus:ring-4 focus:ring-blue-300 focus:outline-none rounded-lg"
         aria-label="Select language"
         aria-expanded={isOpen}
         aria-haspopup="true"
@@ -43,7 +43,7 @@ export function LanguageSwitcher() {
                 key={code}
                 onClick={() => handleLanguageChange(code)}
                 className={`w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-gray-100 transition-colors ${
-                  currentLanguage === code ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                  currentLanguage === code ? 'bg-amber-50 text-amber-700' : 'text-gray-700'
                 }`}
                 aria-label={`Switch to ${language.name}`}
               >
@@ -59,7 +59,7 @@ export function LanguageSwitcher() {
                   </div>
                 </div>
                 {currentLanguage === code && (
-                  <Check className="w-4 h-4 text-blue-600" aria-hidden="true" />
+                  <Check className="w-4 h-4 text-amber-600" aria-hidden="true" />
                 )}
               </button>
             ))}

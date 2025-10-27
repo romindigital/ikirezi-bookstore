@@ -10,11 +10,11 @@ function App() {
   return (
     <BrowserRouter>
       <LanguageProvider>
-        <ErrorBoundary>
+        {/* <ErrorBoundary> */}
           <PerformanceMonitor />
           <AccessibilityChecker />
           <AppRoutes />
-        </ErrorBoundary>
+        {/* </ErrorBoundary> */}
       </LanguageProvider>
     </BrowserRouter>
   )

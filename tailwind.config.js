@@ -12,36 +12,36 @@ export default {
         'desktop-xl': '1600px',
       },
       colors: {
-        // Primary Green - vibrant, light to medium teal green (similar to main banner color)
-        primary: {
-          50: '#f0fdfa',
-          100: '#ccfbf1',
-          200: '#99f6e4',
-          300: '#5eead4',
-          400: '#2dd4bf',
-          500: '#20b2aa', // Primary Green - vibrant teal
-          600: '#1a9b94',
-          700: '#15847e',
-          800: '#106d68',
-          900: '#0b5652',
+        // Emerald Green Palette - professional and modern
+        emerald: {
+          50: '#ecfdf5',
+          100: '#d1fae5',
+          200: '#a7f3d0',
+          300: '#6ee7b7',
+          400: '#34d399',
+          500: '#10b981', // Primary Emerald
+          600: '#059669',
+          700: '#047857',
+          800: '#065f46',
+          900: '#064e3b',
         },
-        // Accent Green - slightly darker, more muted green (for arrows and Umuganda section)
-        accent: {
-          50: '#f0f9f0',
-          100: '#dcf2dc',
-          200: '#b9e5b9',
-          300: '#96d896',
-          400: '#73cb73',
-          500: '#50be50', // Accent Green - muted green
-          600: '#409840',
-          700: '#307230',
-          800: '#204c20',
-          900: '#102610',
+        // Dark Green for accents and text
+        darkgreen: {
+          50: '#f0fdf4',
+          100: '#dcfce7',
+          200: '#bbf7d0',
+          300: '#86efac',
+          400: '#4ade80',
+          500: '#22c55e',
+          600: '#16a34a',
+          700: '#15803d',
+          800: '#166534',
+          900: '#14532d', // Dark Green
         },
         // Custom color palette as specified
         custom: {
-          'primary-green': '#20b2aa',    // Primary Green - vibrant teal
-          'accent-green': '#50be50',     // Accent Green - muted green
+          'primary-emerald': '#10b981',  // Primary Emerald
+          'accent-darkgreen': '#14532d', // Dark Green accent
           'white': '#ffffff',            // White for contrast
           'dark-grey': '#1f2937',        // Dark Grey/Black for main text
           'light-grey': '#6b7280',       // Light Grey for subtle elements
