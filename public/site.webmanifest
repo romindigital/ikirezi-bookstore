@@ -1,0 +1,59 @@
+{
+  "name": "Ikirezi - Your Premier Bookstore",
+  "short_name": "Ikirezi",
+  "description": "Discover your next great read with Ikirezi's curated collection of books from bestselling authors.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["books", "shopping", "education"],
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Browse Books",
+      "short_name": "Books",
+      "description": "Browse our collection of books",
+      "url": "/books",
+      "icons": [
+        {
+          "src": "/shortcut-books.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "short_name": "Categories",
+      "description": "Explore book categories",
+      "url": "/categories",
+      "icons": [
+        {
+          "src": "/shortcut-categories.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "short_name": "Cart",
+      "description": "View your shopping cart",
+      "url": "/cart",
+      "icons": [
+        {
+          "src": "/shortcut-cart.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}
+

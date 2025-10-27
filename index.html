@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    
+    <!-- Primary Meta Tags -->
+    <title>Ikirezi - Your Premier Bookstore | Discover Your Next Great Read</title>
+    <meta name="title" content="Ikirezi - Your Premier Bookstore | Discover Your Next Great Read" />
+    <meta name="description" content="Discover your next great read with Ikirezi's curated collection of books from bestselling authors. Free shipping, secure payments, and quality guarantee." />
+    <meta name="keywords" content="books, bookstore, online books, fiction, non-fiction, bestsellers, reading, literature" />
+    <meta name="author" content="Ikirezi" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="English" />
+    <meta name="revisit-after" content="7 days" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ikirezi.com/" />
+    <meta property="og:title" content="Ikirezi - Your Premier Bookstore" />
+    <meta property="og:description" content="Discover your next great read with Ikirezi's curated collection of books from bestselling authors." />
+    <meta property="og:image" content="https://ikirezi.com/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Ikirezi" />
+    <meta property="og:locale" content="en_US" />
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://ikirezi.com/" />
+    <meta name="twitter:title" content="Ikirezi - Your Premier Bookstore" />
+    <meta name="twitter:description" content="Discover your next great read with Ikirezi's curated collection of books from bestselling authors." />
+    <meta name="twitter:image" content="https://ikirezi.com/og-image.jpg" />
+    <meta name="twitter:site" content="@ikirezi" />
+    <meta name="twitter:creator" content="@ikirezi" />
+    
+    <!-- Favicon and Icons -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="manifest" href="/site.webmanifest" />
+    
+    <!-- Theme Colors -->
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="msapplication-TileColor" content="#2563eb" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+    
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    
+    <!-- DNS Prefetch for better performance -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//images.unsplash.com" />
+    
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+    
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator && window.location.hostname !== 'localhost') {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>
