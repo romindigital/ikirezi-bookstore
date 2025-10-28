@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 import { SEOHead } from '../components/SEOHead';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectFade, Autoplay, Navigation, Pagination } from 'swiper/modules';
@@ -31,6 +32,8 @@ export function Home() {
   });
 
   const slideIntervalRef = useRef(null);
+  const rowRefs = useRef({});
+  const { addToCart } = useCart();
 
   // Featured Hero Books
   const featuredHeroBooks = [
@@ -138,19 +141,15 @@ export function Home() {
   // Enhanced carousel functionality
   const booksPerView = 4; // Number of books visible at once
 
-  const nextCarouselSlide = (section) => {
-    setCurrentIndices(prev => ({
-      ...prev,
-      [section]: (prev[section] + 1) % Math.max(1, featuredBooks.length - booksPerView + 1)
-    }));
+  const smoothScrollRow = (section, direction = 1) => {
+    const container = rowRefs.current[section];
+    if (!container) return;
+    const amount = Math.round(container.clientWidth * 0.9) * direction;
+    container.scrollBy({ left: amount, behavior: 'smooth' });
   };
 
-  const prevCarouselSlide = (section) => {
-    setCurrentIndices(prev => ({
-      ...prev,
-      [section]: prev[section] > 0 ? prev[section] - 1 : Math.max(0, featuredBooks.length - booksPerView)
-    }));
-  };
+  const nextCarouselSlide = (section) => smoothScrollRow(section, 1);
+  const prevCarouselSlide = (section) => smoothScrollRow(section, -1);
 
 
   const togglePlay = () => setIsPlaying(!isPlaying);
@@ -161,8 +160,7 @@ export function Home() {
   const handleQuickAdd = (book, e) => {
     e.preventDefault();
     e.stopPropagation();
-    // Simulate API call - could add toast notification here
-    console.log('Added to cart:', book.title);
+    addToCart(book);
   };
 
   // Reusable Book Card Component with Lazy Loading
@@ -241,22 +239,13 @@ export function Home() {
           </div>
         </div>
 
-        <div className="relative overflow-hidden">
+        <div className="relative">
           <div
-            className="flex transition-transform duration-700 ease-out"
-            style={{
-              transform: `translateX(-${currentIndices[sectionKey] * (100 / booksPerView)}%)`
-            }}
+            ref={(el) => { if (el) rowRefs.current[sectionKey] = el; }}
+            className="flex overflow-x-auto"
           >
-            {books.map((book, index) => (
-              <div
-                key={book.id}
-                className="flex-none px-3"
-                style={{
-                  width: `${100 / booksPerView}%`,
-                  transition: `transform 0.7s ease-out ${index * 0.1}s`
-                }}
-              >
+            {books.map((book) => (
+              <div key={book.id} className="flex-none px-3" style={{ width: `${100 / booksPerView}%` }}>
                 <BookCard book={book} />
               </div>
             ))}

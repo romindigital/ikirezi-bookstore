@@ -206,8 +206,8 @@ export function Header() {
                 to="/"
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 relative group ${
                   isActive('/')
-                    ? 'text-emerald-600'
-                    : 'text-gray-700 hover:text-amber-600'
+                    ? 'text-emerald-600 bg-emerald-50'
+                    : 'text-gray-700 hover:text-emerald-600 hover:bg-emerald-50'
                 }`}
               >
                 <span className="flex items-center">
@@ -217,15 +217,14 @@ export function Header() {
                 {isActive('/') && (
                   <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-emerald-600 rounded-full"></div>
                 )}
-                <div className="absolute inset-0 bg-amber-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-md -z-10"></div>
               </Link>
 
               <Link
                 to="/books"
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 relative group ${
                   isActive('/books')
-                    ? 'text-emerald-600'
-                    : 'text-gray-700 hover:text-amber-600'
+                    ? 'text-emerald-600 bg-emerald-50'
+                    : 'text-gray-700 hover:text-emerald-600 hover:bg-emerald-50'
                 }`}
               >
                 <span className="flex items-center">
@@ -235,7 +234,6 @@ export function Header() {
                 {isActive('/books') && (
                   <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-emerald-600 rounded-full"></div>
                 )}
-                <div className="absolute inset-0 bg-amber-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-md -z-10"></div>
               </Link>
               
               {/* Categories with Mega Menu */}
@@ -245,8 +243,8 @@ export function Header() {
                   onClick={() => setIsMegaMenuOpen(!isMegaMenuOpen)}
                   className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 flex items-center relative group ${
                     isMegaMenuOpen || isActive('/categories')
-                      ? 'text-emerald-600'
-                      : 'text-gray-700 hover:text-amber-600'
+                      ? 'text-emerald-600 bg-emerald-50'
+                      : 'text-gray-700 hover:text-emerald-600 hover:bg-emerald-50'
                   }`}
                 >
                   <Grid3X3 className="w-4 h-4 mr-2" />
@@ -257,7 +255,6 @@ export function Header() {
                   {(isMegaMenuOpen || isActive('/categories')) && (
                     <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-emerald-600 rounded-full"></div>
                   )}
-                  <div className="absolute inset-0 bg-amber-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-md -z-10"></div>
                 </button>
 
                 {/* Enhanced Mega Menu - Professional Bookstore Style */}
@@ -278,7 +275,7 @@ export function Header() {
                             <Link
                               key={book.title}
                               to={book.path}
-                              className="group flex items-center space-x-4 p-4 rounded-xl hover:bg-amber-50 transition-all duration-300 border border-transparent hover:border-amber-200"
+                              className="group flex items-center space-x-4 p-4 rounded-xl hover:bg-emerald-50 transition-all duration-300 border border-transparent hover:border-emerald-200"
                               onClick={closeAllMenus}
                             >
                               <img
@@ -287,7 +284,7 @@ export function Header() {
                                 className="w-16 h-20 object-cover rounded-lg shadow-sm group-hover:shadow-md transition-shadow duration-300"
                               />
                               <div className="flex-1">
-                                <h4 className="font-semibold text-gray-900 group-hover:text-amber-700 transition-colors duration-200 line-clamp-2">
+                                <h4 className="font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors duration-200 line-clamp-2">
                                   {book.title}
                                 </h4>
                                 <p className="text-sm text-gray-600 mb-1">{book.author}</p>
@@ -302,10 +299,8 @@ export function Header() {
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
                         {Object.entries(megaMenuCategories).map(([key, category]) => (
                           <div key={key} className="space-y-4">
-                            <h4 className={`text-lg font-bold flex items-center ${
-                              category.color === 'emerald' ? 'text-emerald-700' : 'text-amber-600'
-                            }`}>
-                              <category.icon className="w-5 h-5 mr-2" />
+                            <h4 className={`text-lg font-bold flex items-center text-gray-900`}>
+                              <category.icon className="w-5 h-5 mr-2 text-emerald-600" />
                               {category.title}
                             </h4>
                             <div className="space-y-2">

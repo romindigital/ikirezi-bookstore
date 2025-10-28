@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  faCreditCard, 
   faMobile, 
-  faWallet, 
   faUniversity, 
   faShieldAlt,
   faCheck,
@@ -16,189 +14,71 @@ import {
   faArrowRight,
   faInfoCircle
 } from '@fortawesome/free-solid-svg-icons';
-import { 
-  faPaypal, 
-  faApple, 
-  faGoogle 
-} from '@fortawesome/free-brands-svg-icons';
+import { Sparkles } from 'lucide-react';
 
 export function PaymentMethods({ selectedMethod, onMethodChange, className = '' }) {
   const [expandedCategory, setExpandedCategory] = useState('cards');
 
   const paymentMethods = {
-    cards: {
-      title: 'Credit & Debit Cards',
-      icon: faCreditCard,
-      description: 'Secure card payments with instant processing',
-      methods: [
-        {
-          id: 'visa',
-          name: 'Visa',
-          icon: '💳',
-          description: 'Visa cards accepted worldwide',
-          popular: true,
-          processingTime: 'Instant',
-          security: 'Bank-level encryption',
-          color: 'from-blue-600 to-blue-800',
-          features: ['3D Secure', 'Instant processing', 'Global acceptance']
-        },
-        {
-          id: 'mastercard',
-          name: 'Mastercard',
-          icon: '💳',
-          description: 'Mastercard accepted worldwide',
-          popular: true,
-          processingTime: 'Instant',
-          security: 'Bank-level encryption',
-          color: 'from-red-500 to-red-700',
-          features: ['3D Secure', 'Instant processing', 'Global acceptance']
-        },
-        {
-          id: 'amex',
-          name: 'American Express',
-          icon: '💳',
-          description: 'American Express cards',
-          processingTime: 'Instant',
-          security: 'Bank-level encryption',
-          color: 'from-green-600 to-green-800',
-          features: ['3D Secure', 'Instant processing', 'Premium support']
-        }
-      ]
-    },
     mobile: {
       title: 'Mobile Money',
       icon: faMobile,
-      description: 'Quick and secure mobile payments across Africa',
+      description: 'Quick and secure mobile money payments in Rwanda',
+      color: 'from-purple-500 to-blue-600',
       methods: [
         {
-          id: 'mtn_mobile_money',
+          id: 'mtn_momo',
           name: 'MTN Mobile Money',
           icon: '📱',
-          description: 'Pay with MTN Mobile Money',
+          description: 'Pay with MTN MoMo Rwanda',
           popular: true,
           processingTime: '1-2 minutes',
           security: 'PIN protected',
           color: 'from-yellow-500 to-orange-600',
-          features: ['Instant transfer', 'PIN security', 'Wide coverage'],
-          countries: ['Rwanda', 'Uganda', 'Ghana', 'Cameroon']
+          features: ['Instant transfer', 'PIN security', 'No fees'],
+          countries: ['Rwanda']
         },
         {
           id: 'airtel_money',
           name: 'Airtel Money',
           icon: '📱',
-          description: 'Pay with Airtel Money',
+          description: 'Pay with Airtel Money Rwanda',
           popular: true,
           processingTime: '1-2 minutes',
           security: 'PIN protected',
           color: 'from-red-500 to-red-700',
-          features: ['Instant transfer', 'PIN security', 'Wide coverage'],
-          countries: ['Rwanda', 'Uganda', 'Tanzania', 'Kenya']
-        },
-        {
-          id: 'orange_money',
-          name: 'Orange Money',
-          icon: '📱',
-          description: 'Pay with Orange Money',
-          processingTime: '1-2 minutes',
-          security: 'PIN protected',
-          color: 'from-orange-500 to-orange-700',
-          features: ['Instant transfer', 'PIN security', 'Wide coverage'],
-          countries: ['Mali', 'Burkina Faso', 'Côte d\'Ivoire', 'Senegal']
-        },
-        {
-          id: 'vodacom_m_pesa',
-          name: 'Vodacom M-Pesa',
-          icon: '📱',
-          description: 'Pay with Vodacom M-Pesa',
-          processingTime: '1-2 minutes',
-          security: 'PIN protected',
-          color: 'from-green-500 to-green-700',
-          features: ['Instant transfer', 'PIN security', 'Wide coverage'],
-          countries: ['Tanzania', 'Kenya', 'Uganda', 'Mozambique']
-        },
-        {
-          id: 'equitel',
-          name: 'Equitel',
-          icon: '📱',
-          description: 'Pay with Equitel',
-          processingTime: '1-2 minutes',
-          security: 'PIN protected',
-          color: 'from-blue-500 to-blue-700',
-          features: ['Instant transfer', 'PIN security', 'Wide coverage'],
-          countries: ['Kenya']
-        }
-      ]
-    },
-    wallets: {
-      title: 'Digital Wallets',
-      icon: faWallet,
-      description: 'Fast and secure digital wallet payments',
-      methods: [
-        {
-          id: 'paypal',
-          name: 'PayPal',
-          icon: faPaypal,
-          description: 'Pay with your PayPal account',
-          popular: true,
-          processingTime: 'Instant',
-          security: 'PayPal security',
-          color: 'from-blue-500 to-blue-700',
-          features: ['Buyer protection', 'Instant processing', 'Global acceptance'],
-          isIcon: true
-        },
-        {
-          id: 'apple_pay',
-          name: 'Apple Pay',
-          icon: faApple,
-          description: 'Pay with Apple Pay',
-          popular: true,
-          processingTime: 'Instant',
-          security: 'Touch ID / Face ID',
-          color: 'from-gray-800 to-gray-900',
-          features: ['Biometric security', 'Instant processing', 'Apple ecosystem'],
-          isIcon: true
-        },
-        {
-          id: 'google_pay',
-          name: 'Google Pay',
-          icon: faGoogle,
-          description: 'Pay with Google Pay',
-          popular: true,
-          processingTime: 'Instant',
-          security: 'Google security',
-          color: 'from-green-500 to-green-700',
-          features: ['Google security', 'Instant processing', 'Android ecosystem'],
-          isIcon: true
+          features: ['Instant transfer', 'PIN security', 'No fees'],
+          countries: ['Rwanda']
         }
       ]
     },
     bank: {
       title: 'Bank Transfer',
       icon: faUniversity,
-      description: 'Direct bank transfers and wire payments',
+      description: 'Direct bank transfers from major Rwandan banks',
       methods: [
         {
-          id: 'bank_transfer',
-          name: 'Bank Transfer',
+          id: 'bk',
+          name: 'Bank of Kigali',
           icon: '🏦',
-          description: 'Direct bank transfer',
+          description: 'Pay directly from Bank of Kigali',
           popular: true,
-          processingTime: '1-3 business days',
-          security: 'Bank security',
-          color: 'from-indigo-500 to-indigo-700',
-          features: ['Bank security', 'Direct transfer', 'No fees'],
-          countries: ['All countries']
+          processingTime: 'Instant',
+          security: 'Bank-level security',
+          color: 'from-blue-600 to-blue-800',
+          features: ['Instant transfer', 'No fees', 'Direct debit'],
+          countries: ['Rwanda']
         },
         {
-          id: 'wire_transfer',
-          name: 'Wire Transfer',
+          id: 'equity',
+          name: 'Equity Bank',
           icon: '🏦',
-          description: 'International wire transfer',
-          processingTime: '2-5 business days',
-          security: 'Bank security',
-          color: 'from-purple-500 to-purple-700',
-          features: ['International', 'Bank security', 'Large amounts'],
-          countries: ['All countries']
+          description: 'Pay directly from Equity Bank Rwanda',
+          processingTime: 'Instant',
+          security: 'Bank-level security',
+          color: 'from-orange-500 to-red-600',
+          features: ['Instant transfer', 'No fees', 'Direct debit'],
+          countries: ['Rwanda']
         }
       ]
     }
@@ -253,7 +133,7 @@ export function PaymentMethods({ selectedMethod, onMethodChange, className = '' 
                 <div className="flex items-center space-x-2">
                   {expandedCategory === categoryKey && (
                     <div className="flex items-center text-blue-600">
-                      <FontAwesomeIcon icon={faSparkles} className="w-4 h-4 mr-1" />
+                      <Sparkles className="w-4 h-4 mr-1" />
                       <span className="text-sm font-medium">Active</span>
                     </div>
                   )}
@@ -397,25 +277,7 @@ export function PaymentMethods({ selectedMethod, onMethodChange, className = '' 
 export function PaymentMethodDetails({ method, className = '' }) {
   const getMethodInfo = (methodId) => {
     const methodMap = {
-      'visa': {
-        name: 'Visa',
-        icon: '💳',
-        description: 'Enter your Visa card details below',
-        fields: ['cardNumber', 'expiryDate', 'cvv', 'nameOnCard']
-      },
-      'mastercard': {
-        name: 'Mastercard',
-        icon: '💳',
-        description: 'Enter your Mastercard details below',
-        fields: ['cardNumber', 'expiryDate', 'cvv', 'nameOnCard']
-      },
-      'amex': {
-        name: 'American Express',
-        icon: '💳',
-        description: 'Enter your American Express card details below',
-        fields: ['cardNumber', 'expiryDate', 'cvv', 'nameOnCard']
-      },
-      'mtn_mobile_money': {
+      'mtn_momo': {
         name: 'MTN Mobile Money',
         icon: '📱',
         description: 'Enter your MTN Mobile Money number',
@@ -427,53 +289,17 @@ export function PaymentMethodDetails({ method, className = '' }) {
         description: 'Enter your Airtel Money number',
         fields: ['phoneNumber', 'pin']
       },
-      'orange_money': {
-        name: 'Orange Money',
-        icon: '📱',
-        description: 'Enter your Orange Money number',
-        fields: ['phoneNumber', 'pin']
-      },
-      'vodacom_m_pesa': {
-        name: 'Vodacom M-Pesa',
-        icon: '📱',
-        description: 'Enter your M-Pesa number',
-        fields: ['phoneNumber', 'pin']
-      },
-      'equitel': {
-        name: 'Equitel',
-        icon: '📱',
-        description: 'Enter your Equitel number',
-        fields: ['phoneNumber', 'pin']
-      },
-      'paypal': {
-        name: 'PayPal',
-        icon: '💳',
-        description: 'You will be redirected to PayPal to complete your payment',
-        fields: []
-      },
-      'apple_pay': {
-        name: 'Apple Pay',
-        icon: '💳',
-        description: 'Complete payment with Touch ID or Face ID',
-        fields: []
-      },
-      'google_pay': {
-        name: 'Google Pay',
-        icon: '💳',
-        description: 'Complete payment with your Google account',
-        fields: []
-      },
-      'bank_transfer': {
-        name: 'Bank Transfer',
+      'bk': {
+        name: 'Bank of Kigali',
         icon: '🏦',
-        description: 'Transfer funds to our bank account',
-        fields: ['accountNumber', 'bankName']
+        description: 'Pay directly from your BK account',
+        fields: ['accountNumber', 'pin']
       },
-      'wire_transfer': {
-        name: 'Wire Transfer',
+      'equity': {
+        name: 'Equity Bank',
         icon: '🏦',
-        description: 'International wire transfer details',
-        fields: ['swiftCode', 'accountNumber', 'bankName']
+        description: 'Pay directly from your Equity Bank account',
+        fields: ['accountNumber', 'pin']
       }
     };
     
@@ -523,7 +349,7 @@ export function PaymentMethodDetails({ method, className = '' }) {
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-lg"
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <FontAwesomeIcon icon={faCreditCard} className="w-5 h-5 text-gray-400" />
+                    <FontAwesomeIcon icon={faMobile} className="w-5 h-5 text-gray-400" />
                   </div>
                 </div>
               </div>

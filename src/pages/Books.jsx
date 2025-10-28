@@ -3,10 +3,11 @@ import { useDebounce } from '../hooks/useDebounce';
 import { Link, useSearchParams } from 'react-router-dom';
 import { bookService } from '../services/bookService';
 import { trackPageView, trackInteraction } from '../services/analyticsService';
+import { useCart } from '../context/CartContext';
 import { BookCard } from '../components/BookCard';
 import { CardSkeleton } from '../components/BookCard'; 
 import { SEOHead } from '../components/SEOHead';
-import { FilterPanel } from '../components/FilterPanel';
+// import { FilterPanel } from '../components/FilterPanel';
 import CompactBookCard from '../components/CompactBookCard';
 import { MobileFilterSheet } from '../components/MobileFilterSheet';
 import { PaginationControls } from '../components/PaginationControls';
@@ -208,6 +209,7 @@ const VIEW_OPTIONS = [
 
 export function Books() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { addToCart } = useCart();
 
   // URL State
   const viewMode = searchParams.get('view') || 'grid';
@@ -224,6 +226,7 @@ export function Books() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [showCompareDrawer, setShowCompareDrawer] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   
   const debouncedSearchQuery = useDebounce(searchInput, 300);
 
@@ -239,6 +242,14 @@ export function Books() {
   useEffect(() => {
     setSearchInput(searchQuery);
   }, [searchQuery]);
+
+  // Track viewport to disable mobile sheet on desktop
+  useEffect(() => {
+    const update = () => setIsDesktop(typeof window !== 'undefined' && window.innerWidth >= 1024);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   // Show compare drawer when books are selected
   useEffect(() => {
@@ -256,6 +267,28 @@ export function Books() {
     error,
     totalItems 
   } = useBooksQuery(filters);
+
+  // Build dynamic category buckets from loaded books (Barnes & Noble-like rows)
+  const categoryBuckets = useMemo(() => {
+    if (!books || books.length === 0) return [];
+
+    const getCategoryName = (b) =>
+      (b.category || b.genre || (Array.isArray(b.categories) ? b.categories[0] : '') || 'Other').trim();
+
+    const map = new Map();
+    for (const b of books) {
+      const name = getCategoryName(b);
+      if (!map.has(name)) map.set(name, []);
+      map.get(name).push(b);
+    }
+
+    const buckets = Array.from(map.entries())
+      .map(([name, list]) => ({ name, list }))
+      .sort((a, b) => b.list.length - a.list.length);
+
+    // Limit to top 8 categories for performance/clarity
+    return buckets.slice(0, 8);
+  }, [books]);
 
   // Infinite Scroll
   const observer = useRef(null);
@@ -322,9 +355,8 @@ export function Books() {
 
 
   const handleAddToCart = (book) => {
-    // addToCart(book); // Your cart implementation
+    addToCart(book);
     trackInteraction('add_to_cart', 'book_list', book.id);
-    // Show toast notification here
   };
 
   const handleSearchInput = (query) => {
@@ -427,263 +459,86 @@ export function Books() {
         <FloatingElements count={8} intensity={0.1} />
 
         <div className="max-w-full px-2 sm:px-4 lg:px-6 py-10 relative z-10">
-          
-          {/* Enhanced Header */}
-          <section className="sticky top-0 bg-white/95 backdrop-blur-sm z-30 pt-6 pb-8 border-b border-gray-200 shadow-sm">
-            {/* Breadcrumb */}
-            <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-4" aria-label="Breadcrumb">
-              <Link to="/" className="hover:text-emerald-600 transition-colors">Home</Link>
-              <ChevronRight className="w-3 h-3" />
-              <span className="text-gray-900 font-medium">Books</span>
-            </nav>
-            
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <div>
-                <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-                  {searchQuery ? `Search: "${searchQuery}"` : 'All Books'}
-                </h1>
-                <p className="text-gray-600">
-                  Found <span className="font-semibold text-emerald-600">{books.length}</span> of{' '}
-                  <span className="font-semibold">{totalItems}</span> books
-                </p>
-              </div>
-              
-              {/* Quick Stats */}
-              <div className="flex items-center space-x-6 text-sm">
-                <div className="text-center">
-                  <div className="text-xl font-bold text-emerald-600">{Math.floor(totalItems * 0.15)}</div>
-                  <div className="text-gray-500">New This Week</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-amber-600">{Math.floor(totalItems * 0.08)}</div>
-                  <div className="text-gray-500">On Sale</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-purple-600">{Math.floor(totalItems * 0.12)}</div>
-                  <div className="text-gray-500">Trending</div>
-                </div>
-              </div>
-            </div>
 
-            {/* Search and Controls */}
-            <div className="mt-6 space-y-4">
-              <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
-                {/* Search Bar */}
-                <div className="flex-1 max-w-2xl relative">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      value={searchInput}
-                      onChange={(e) => handleSearchInput(e.target.value)}
-                      onFocus={() => searchInput && setShowSuggestions(true)}
-                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchInput)}
-                      placeholder="Search by title, author, or keyword..."
-                      className="w-full pl-10 pr-10 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 bg-white shadow-sm hover:shadow-md"
-                      aria-label="Search books"
-                    />
-                    {searchInput && (
-                      <button 
-                        onClick={() => handleSearch('')} 
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                        aria-label="Clear search"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    )}
-                  </div>
-                    
-                  {/* Search Suggestions */}
-                  {showSuggestions && searchSuggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-64 overflow-y-auto">
-                      {searchSuggestions.map((suggestion) => (
-                        <button
-                          key={suggestion.id}
-                          onClick={() => handleSearch(suggestion.title)}
-                          className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center space-x-3"
-                          onKeyDown={(e) => e.key === 'Enter' && handleSearch(suggestion.title)}
-                        >
-                          <BookOpen className="w-4 h-4 text-emerald-500" />
-                          <div className="flex-1 text-left">
-                            <div className="font-medium text-gray-900">{suggestion.title}</div>
-                            <div className="text-sm text-gray-500">by {suggestion.author}</div>
-                          </div>
-                        </button>
-                      ))}
-                      <div className="border-t border-gray-200">
-                        <button
-                          onClick={() => handleSearch(searchInput)}
-                          className="w-full text-left px-4 py-3 hover:bg-gray-50 text-emerald-600 font-medium"
-                        >
-                          See all results for "{searchInput}"
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+          {/* Main Content */}
+          <div className="flex gap-6 pt-8">
 
-                {/* Controls */}
-                <div className="flex items-center gap-3 w-full lg:w-auto">
-                  {/* Sort Dropdown */}
-                  <div className="relative flex-1 lg:flex-initial">
-                    <select
-                      value={sortBy}
-                      onChange={(e) => handleSortChange(e.target.value)}
-                      className="w-full appearance-none cursor-pointer bg-white border-2 border-gray-200 rounded-xl px-4 py-3 pr-12 shadow-sm hover:shadow-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
-                      aria-label="Sort books by"
-                    >
-                      {SORT_OPTIONS.map(option => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none rotate-90" />
-                  </div>
-
-                  {/* View Mode Toggle */}
-                  <div className="hidden sm:flex bg-white rounded-xl p-1 shadow-sm border-2 border-gray-200">
-                    {VIEW_OPTIONS.map(option => (
-                      <button
-                        key={option.value}
-                        onClick={() => handleViewModeChange(option.value)}
-                        className={`p-2 rounded-lg transition-all duration-300 ${
-                          viewMode === option.value 
-                            ? 'bg-emerald-600 text-white shadow-lg' 
-                            : 'text-gray-600 hover:bg-gray-50'
-                        }`}
-                        aria-label={`${option.label} view`}
-                      >
-                        <option.icon className="w-4 h-4" />
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Filter Toggle */}
+            {/* Mobile Controls + Sheet (small screens only) */}
+            <div className="lg:hidden w-full">
+              <div className="sticky top-16 z-20 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-b border-gray-200">
+                <div className="px-2 py-3 flex items-center gap-2">
                   <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="flex items-center gap-2 px-4 py-3 rounded-xl transition-all duration-300 bg-white text-gray-700 border-2 border-gray-200 hover:shadow-lg hover:border-emerald-500 hover:text-emerald-600 relative group"
-                    aria-expanded={showFilters}
+                    onClick={() => setShowFilters(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm hover:border-emerald-500 hover:text-emerald-600"
                   >
-                    <SlidersHorizontal className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
-                    <span className="font-medium">Filters</span>
+                    <SlidersHorizontal className="w-4 h-4" />
+                    <span className="text-sm font-medium">Filters</span>
                     {getActiveFiltersCount > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold">
+                      <span className="ml-1 text-xs bg-emerald-600 text-white rounded-full px-2 py-0.5">
                         {getActiveFiltersCount}
                       </span>
                     )}
                   </button>
-
-                  {/* Compare Mode Toggle */}
-                  <button
-                    onClick={toggleCompareMode}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-xl transition-all duration-300 border-2 ${
-                      compareMode
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg'
-                        : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-500 hover:text-emerald-600'
-                    }`}
-                    aria-pressed={compareMode}
-                  >
-                    <GitCompare className="w-4 h-4" />
-                    <span className="font-medium">Compare</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Active Filter Pills */}
-              {getActiveFiltersCount > 0 && (
-                <div className="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-200">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-sm font-semibold text-emerald-800 flex items-center gap-2">
-                      <Filter className="w-4 h-4" />
-                      Active Filters ({getActiveFiltersCount}):
-                    </span>
-                    {Array.from(searchParams.entries()).map(([key, value]) => {
-                      if (key !== 'sort' && key !== 'view' && key !== 'compare' && value) {
-                        return (
-                          <span key={key} className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium bg-emerald-600 text-white rounded-full shadow-sm">
-                            <span className="capitalize">{key}: {value}</span>
-                            <button
-                              onClick={() => handleUpdateSearchParams(key, '', true)}
-                              className="ml-1 text-emerald-100 hover:text-white transition-colors"
-                              aria-label={`Remove ${key} filter`}
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </span>
-                        );
-                      }
-                      return null;
-                    })}
-                    <button 
-                      onClick={clearAllFilters} 
-                      className="text-sm text-red-600 hover:text-red-800 font-semibold ml-2 px-3 py-1 rounded-lg hover:bg-red-50 transition-colors"
-                    >
-                      Clear All
-                    </button>
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchInput}
+                      onChange={(e) => handleSearchInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchInput)}
+                      placeholder="Search in books..."
+                      className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    />
                   </div>
                 </div>
+              </div>
+              {!isDesktop && (
+                <MobileFilterSheet
+                  isOpen={showFilters}
+                  onClose={() => setShowFilters(false)}
+                  filters={{
+                    category: selectedCategory,
+                    search: searchQuery,
+                    sortBy: sortBy,
+                    priceRange: priceRange
+                  }}
+                  onFiltersChange={(newFilters) => {
+                    handleCategoryChange(newFilters.category || '');
+                    handleSearch(newFilters.search || '');
+                    handleSortChange(newFilters.sortBy || 'popular');
+                    handlePriceRangeChange(newFilters.priceRange || '');
+                  }}
+                  categories={CATEGORIES}
+                  priceRanges={[
+                    { value: '0-10', label: 'Under $10' },
+                    { value: '10-25', label: '$10 - $25' },
+                    { value: '25-50', label: '$25 - $50' },
+                    { value: '50+', label: 'Over $50' }
+                  ]}
+                  sortOptions={SORT_OPTIONS}
+                />
               )}
             </div>
-          </section>
 
-          {/* Main Content */}
-          <div className="flex gap-6 pt-8">
-            
-            {/* Desktop Filter Sidebar */}
-            <div className="hidden lg:block flex-shrink-0">
-              <FilterPanel 
-                filters={{
-                  category: selectedCategory,
-                  search: searchQuery,
-                  sortBy: sortBy,
-                  priceRange: priceRange
-                }}
-                onFiltersChange={(newFilters) => {
-                  handleCategoryChange(newFilters.category || '');
-                  handleSearch(newFilters.search || '');
-                  handleSortChange(newFilters.sortBy || 'popular');
-                  handlePriceRangeChange(newFilters.priceRange || '');
-                }}
-                isOpen={showFilters}
-                onToggle={() => setShowFilters(!showFilters)}
-                categories={CATEGORIES}
-                priceRanges={[
-                  { value: '0-10', label: 'Under $10' },
-                  { value: '10-25', label: '$10 - $25' },
-                  { value: '25-50', label: '$25 - $50' },
-                  { value: '50+', label: 'Over $50' }
-                ]}
-                sortOptions={SORT_OPTIONS}
-              />
-            </div>
-
-            {/* Mobile Filter Sheet */}
-            <MobileFilterSheet
-              isOpen={showFilters}
-              onClose={() => setShowFilters(false)}
-              filters={{
-                category: selectedCategory,
-                search: searchQuery,
-                sortBy: sortBy,
-                priceRange: priceRange
-              }}
-              onFiltersChange={(newFilters) => {
-                handleCategoryChange(newFilters.category || '');
-                handleSearch(newFilters.search || '');
-                handleSortChange(newFilters.sortBy || 'popular');
-                handlePriceRangeChange(newFilters.priceRange || '');
-              }}
-              categories={CATEGORIES}
-              priceRanges={[
-                { value: '0-10', label: 'Under $10' },
-                { value: '10-25', label: '$10 - $25' },
-                { value: '25-50', label: '$25 - $50' },
-                { value: '50+', label: 'Over $50' }
-              ]}
-              sortOptions={SORT_OPTIONS}
-            />
+            {/* Left Sidebar: Search + Filters */}
+            <aside className="hidden lg:block w-80 flex-shrink-0">
+              <div className="sticky top-24 space-y-4">
+                {/* Sidebar Search */}
+                <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchInput}
+                      onChange={(e) => handleSearchInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchInput)}
+                      placeholder="Search in books..."
+                      className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            </aside>
 
             {/* Books Listings */}
             <section className="flex-1 min-w-0">
@@ -710,47 +565,63 @@ export function Books() {
                 />
               ) : (
                 <>
-                  {/* Carousel rows per category (Google Books-like) */}
-                  <div className="space-y-8">
-                    {CATEGORIES.map((cat) => {
-                      // Build rows: 'All' shows a curated subset, others filter by category
-                      let rowBooks = [];
-                      if (cat === 'All') {
-                        rowBooks = books.slice(0, 20);
-                      } else {
-                        rowBooks = books.filter(b => (b.category || b.genre || '').toLowerCase() === cat.toLowerCase());
-                      }
-
-                      if (!rowBooks || rowBooks.length === 0) return null;
-
-                      return (
-                        <div key={cat}>
-                          <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-lg font-semibold text-gray-900">{cat}</h3>
-                            <Link to={`/books?category=${encodeURIComponent(cat)}`} className="text-sm text-emerald-600 hover:underline">See all</Link>
-                          </div>
-
-                                <div className="relative">
-                                  <Swiper
-                                    modules={[FreeMode, Navigation]}
-                                    freeMode={true}
-                                    navigation
-                                    slidesPerView={'auto'}
-                                    spaceBetween={16}
-                                    className="py-2"
-                                  >
-                                    {rowBooks.map((book, i) => (
-                                      <SwiperSlide key={book.id || `${cat}-${i}`} className="!w-auto">
-                                        <div ref={i === rowBooks.length - 1 ? infiniteScrollRef : null} className="px-1">
-                                          <CompactBookCard book={book} onAddToCart={() => handleAddToCart(book)} />
-                                        </div>
-                                      </SwiperSlide>
-                                    ))}
-                                  </Swiper>
-                                </div>
+                  {/* Carousel rows per category (Google/B&N-like) */}
+                  <div className="space-y-10">
+                    {/* Featured/All row */}
+                    {books.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-lg font-semibold text-gray-900">Featured Picks</h3>
+                          <Link to="/books" className="text-sm text-emerald-600 hover:underline">See all</Link>
                         </div>
-                      );
-                    })}
+                        <div className="relative">
+                          <Swiper
+                            modules={[FreeMode, Navigation]}
+                            freeMode={true}
+                            navigation
+                            slidesPerView={'auto'}
+                            spaceBetween={16}
+                            className="py-2"
+                          >
+                            {books.slice(0, 20).map((book, i) => (
+                              <SwiperSlide key={book.id || `featured-${i}`} className="!w-auto">
+                                <div ref={i === 19 ? infiniteScrollRef : null} className="px-1">
+                                  <CompactBookCard book={book} onAddToCart={() => handleAddToCart(book)} />
+                                </div>
+                              </SwiperSlide>
+                            ))}
+                          </Swiper>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Dynamic top categories */}
+                    {categoryBuckets.map(({ name, list }, idx) => (
+                      <div key={`${name}-${idx}`}>
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-lg font-semibold text-gray-900">{name}</h3>
+                          <Link to={`/books?category=${encodeURIComponent(name)}`} className="text-sm text-emerald-600 hover:underline">See all</Link>
+                        </div>
+                        <div className="relative">
+                          <Swiper
+                            modules={[FreeMode, Navigation]}
+                            freeMode={true}
+                            navigation
+                            slidesPerView={'auto'}
+                            spaceBetween={16}
+                            className="py-2"
+                          >
+                            {list.map((book, i) => (
+                              <SwiperSlide key={book.id || `${name}-${i}`} className="!w-auto">
+                                <div ref={i === list.length - 1 ? infiniteScrollRef : null} className="px-1">
+                                  <CompactBookCard book={book} onAddToCart={() => handleAddToCart(book)} />
+                                </div>
+                              </SwiperSlide>
+                            ))}
+                          </Swiper>
+                        </div>
+                      </div>
+                    ))}
 
                     {/* Loading and End States (kept below carousels) */}
                     <div className="mt-6">
@@ -804,6 +675,8 @@ export function Books() {
                 </>
               )}
             </section>
+
+            {/* Right sidebar removed to keep internal left filter + right rows */}
           </div>
         </div>
 

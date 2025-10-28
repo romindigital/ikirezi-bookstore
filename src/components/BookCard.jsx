@@ -531,75 +531,90 @@ export function BookCard({
 }
 
 // Skeleton loading component for book cards
-export function CardSkeleton({ viewMode = 'grid' }) {
+export function CardSkeleton({ viewMode = 'grid', count }) {
+  // Determine how many skeleton cards to show based on viewport
+  const getColumnsForWidth = (width) => {
+    if (width >= 1536) return 6; // 2xl
+    if (width >= 1280) return 5; // xl
+    if (width >= 1024) return 4; // lg
+    if (width >= 640) return 3;  // sm
+    return 2;                    // base
+  };
+
+  let computedCount = count;
+  if (!computedCount) {
+    try {
+      const cols = getColumnsForWidth(typeof window !== 'undefined' ? window.innerWidth : 1024);
+      const rows = viewMode === 'list' ? 6 : 2; // more items for list, 2 rows for cards
+      computedCount = cols * rows;
+    } catch (e) {
+      computedCount = viewMode === 'list' ? 6 : 8; // safe fallback
+    }
+  }
+
   if (viewMode === 'list') {
     return (
-      <article className="bg-white rounded-xl shadow-md flex animate-pulse">
-        {/* Image skeleton */}
-        <div className="w-32 h-48 bg-gray-300 rounded-l-xl flex-shrink-0"></div>
-        
-        {/* Content skeleton */}
-        <div className="flex-1 p-4 space-y-3">
-          <div className="h-6 bg-gray-300 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-300 rounded w-1/2"></div>
-          <div className="h-3 bg-gray-300 rounded w-full"></div>
-          <div className="h-3 bg-gray-300 rounded w-2/3"></div>
-          
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex space-x-1">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="w-4 h-4 bg-gray-300 rounded"></div>
-              ))}
+      <div className="space-y-3">
+        {[...Array(computedCount)].map((_, idx) => (
+          <article key={idx} className="bg-white rounded-xl shadow-md flex animate-pulse">
+            <div className="w-32 h-48 bg-gray-300 rounded-l-xl flex-shrink-0"></div>
+            <div className="flex-1 p-4 space-y-3">
+              <div className="h-6 bg-gray-300 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+              <div className="h-3 bg-gray-300 rounded w-full"></div>
+              <div className="h-3 bg-gray-300 rounded w-2/3"></div>
+              <div className="flex items-center justify-between mt-4">
+                <div className="flex space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="w-4 h-4 bg-gray-300 rounded"></div>
+                  ))}
+                </div>
+                <div className="h-6 bg-gray-300 rounded w-16"></div>
+              </div>
             </div>
-            <div className="h-6 bg-gray-300 rounded w-16"></div>
-          </div>
-        </div>
-      </article>
+          </article>
+        ))}
+      </div>
     );
   }
 
   if (viewMode === 'compact') {
     return (
-      <article className="bg-white rounded-lg shadow-sm animate-pulse">
-        <div className="h-32 bg-gray-300 rounded-t-lg"></div>
-        <div className="p-2 space-y-2">
-          <div className="h-3 bg-gray-300 rounded w-full"></div>
-          <div className="h-3 bg-gray-300 rounded w-2/3"></div>
-          <div className="flex justify-between items-center">
-            <div className="h-4 bg-gray-300 rounded w-12"></div>
-            <div className="flex space-x-1">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="w-3 h-3 bg-gray-300 rounded"></div>
-              ))}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+        {[...Array(computedCount)].map((_, idx) => (
+          <article key={idx} className="bg-white rounded-lg shadow-sm animate-pulse">
+            <div className="h-32 bg-gray-300 rounded-t-lg"></div>
+            <div className="p-2 space-y-2">
+              <div className="h-3 bg-gray-300 rounded w-full"></div>
+              <div className="h-3 bg-gray-300 rounded w-2/3"></div>
+              <div className="flex justify-between items-center">
+                <div className="h-4 bg-gray-300 rounded w-12"></div>
+                <div className="h-3 bg-gray-300 rounded w-10"></div>
+              </div>
             </div>
-          </div>
-        </div>
-      </article>
+          </article>
+        ))}
+      </div>
     );
   }
 
   // Default grid view skeleton
   return (
-    <article className="bg-white rounded-xl shadow-md h-full flex flex-col animate-pulse">
-      {/* Image skeleton */}
-      <div className="h-48 sm:h-52 lg:h-56 bg-gray-300 rounded-t-xl flex-shrink-0"></div>
-      
-      {/* Content skeleton */}
-      <div className="p-4 flex flex-col flex-grow space-y-3">
-        <div className="h-4 bg-gray-300 rounded w-full"></div>
-        <div className="h-3 bg-gray-300 rounded w-2/3"></div>
-        
-        <div className="flex items-center space-x-2">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="w-4 h-4 bg-gray-300 rounded"></div>
-          ))}
-          <div className="h-3 bg-gray-300 rounded w-8"></div>
-        </div>
-        
-        <div className="h-5 bg-gray-300 rounded w-16"></div>
-        
-        <div className="h-10 bg-gray-300 rounded w-full mt-auto"></div>
-      </div>
-    </article>
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+      {[...Array(computedCount)].map((_, idx) => (
+        <article key={idx} className="bg-white rounded-xl shadow-md h-full flex flex-col animate-pulse">
+          <div className="h-48 sm:h-52 lg:h-56 bg-gray-300 rounded-t-xl flex-shrink-0"></div>
+          <div className="p-4 flex flex-col flex-grow space-y-3">
+            <div className="h-4 bg-gray-300 rounded w-full"></div>
+            <div className="h-3 bg-gray-300 rounded w-2/3"></div>
+            <div className="flex items-center space-x-2">
+              <div className="h-3 bg-gray-300 rounded w-16"></div>
+            </div>
+            <div className="h-5 bg-gray-300 rounded w-16"></div>
+            <div className="h-10 bg-gray-300 rounded w-full mt-auto"></div>
+          </div>
+        </article>
+      ))}
+    </div>
   );
 }
