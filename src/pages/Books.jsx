@@ -1,12 +1,13 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { useDebounce } from '../hooks/useDebounce';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { bookService } from '../services/bookService';
 import { trackPageView, trackInteraction } from '../services/analyticsService';
 import { BookCard } from '../components/BookCard';
 import { CardSkeleton } from '../components/BookCard'; 
 import { SEOHead } from '../components/SEOHead';
 import { FilterPanel } from '../components/FilterPanel';
+import CompactBookCard from '../components/CompactBookCard';
 import { MobileFilterSheet } from '../components/MobileFilterSheet';
 import { PaginationControls } from '../components/PaginationControls';
 import { FloatingElements } from '../components/AdvancedParallax';
@@ -16,6 +17,13 @@ import {
   Clock, DollarSign, User, Award, Sparkles, RotateCcw,
   AlertCircle, GitCompare
 } from 'lucide-react';
+
+// Swiper for horizontal carousels
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { FreeMode, Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/free-mode';
+import 'swiper/css/navigation';
 
 // Empty State Component
 const EmptyState = ({ searchQuery, selectedCategory, onClearFilters }) => (
@@ -121,7 +129,7 @@ function useBooksQuery(filters) {
   const totalItems = 150;
   const itemsPerPage = 24;
 
-  const fetchPage = async (page, signal) => {
+  const fetchPage = useCallback(async (page, signal) => {
     setLoading(true);
     setIsFetchingNextPage(page > 1);
     try {
@@ -158,8 +166,10 @@ function useBooksQuery(filters) {
       setLoading(false);
       setIsFetchingNextPage(false);
     }
-  };
+  }, [filters]);
 
+  // We intentionally omit `fetchPage` from deps because it's recreated per-hook call
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const controller = new AbortController();
     setData({ pages: [], pageParams: [1] });
@@ -197,9 +207,7 @@ const VIEW_OPTIONS = [
 ];
 
 export function Books() {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const lastBookElementRef = useRef(null);
 
   // URL State
   const viewMode = searchParams.get('view') || 'grid';
@@ -311,16 +319,7 @@ export function Books() {
     trackInteraction('toggle', 'compare_mode', compareMode ? 'off' : 'on');
   };
 
-  const handleBookSelection = (bookId) => {
-    setSelectedBooks(prev => {
-      const updated = prev.includes(bookId)
-        ? prev.filter(id => id !== bookId)
-        : [...prev, bookId];
-      
-      trackInteraction('book_compare_selection', 'selection_count', updated.length);
-      return updated;
-    });
-  };
+
 
   const handleAddToCart = (book) => {
     // addToCart(book); // Your cart implementation
@@ -711,80 +710,96 @@ export function Books() {
                 />
               ) : (
                 <>
-                  <div className={`grid gap-6 ${
-                    viewMode === 'grid' 
-                      ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6' 
-                      : 'grid-cols-1'
-                  }`}>
-                    {books.map((book, index) => {
-                      const isLastElement = index === books.length - 1;
-                      const cardProps = {
-                        book,
-                        viewMode,
-                        compareMode,
-                        isSelected: selectedBooks.includes(book.id),
-                        onSelect: handleBookSelection,
-                        onAddToCart: () => handleAddToCart(book)
-                      };
+                  {/* Carousel rows per category (Google Books-like) */}
+                  <div className="space-y-8">
+                    {CATEGORIES.map((cat) => {
+                      // Build rows: 'All' shows a curated subset, others filter by category
+                      let rowBooks = [];
+                      if (cat === 'All') {
+                        rowBooks = books.slice(0, 20);
+                      } else {
+                        rowBooks = books.filter(b => (b.category || b.genre || '').toLowerCase() === cat.toLowerCase());
+                      }
+
+                      if (!rowBooks || rowBooks.length === 0) return null;
 
                       return (
-                        <div 
-                          key={book.id} 
-                          ref={isLastElement ? infiniteScrollRef : null}
-                        >
-                          <BookCard {...cardProps} />
+                        <div key={cat}>
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-lg font-semibold text-gray-900">{cat}</h3>
+                            <Link to={`/books?category=${encodeURIComponent(cat)}`} className="text-sm text-emerald-600 hover:underline">See all</Link>
+                          </div>
+
+                                <div className="relative">
+                                  <Swiper
+                                    modules={[FreeMode, Navigation]}
+                                    freeMode={true}
+                                    navigation
+                                    slidesPerView={'auto'}
+                                    spaceBetween={16}
+                                    className="py-2"
+                                  >
+                                    {rowBooks.map((book, i) => (
+                                      <SwiperSlide key={book.id || `${cat}-${i}`} className="!w-auto">
+                                        <div ref={i === rowBooks.length - 1 ? infiniteScrollRef : null} className="px-1">
+                                          <CompactBookCard book={book} onAddToCart={() => handleAddToCart(book)} />
+                                        </div>
+                                      </SwiperSlide>
+                                    ))}
+                                  </Swiper>
+                                </div>
                         </div>
                       );
                     })}
-                  </div>
 
-                  {/* Loading and End States */}
-                  <div className="mt-12">
-                    {isFetchingNextPage && (
-                      <div className="space-y-4">
-                        <div className="text-center mb-6">
-                          <div className="inline-flex items-center gap-2 text-emerald-600">
-                            <div className="animate-spin rounded-full h-5 w-5 border-2 border-emerald-600 border-t-transparent"></div>
-                            <span className="font-medium">Loading more books...</span>
+                    {/* Loading and End States (kept below carousels) */}
+                    <div className="mt-6">
+                      {isFetchingNextPage && (
+                        <div className="space-y-4">
+                          <div className="text-center mb-6">
+                            <div className="inline-flex items-center gap-2 text-emerald-600">
+                              <div className="animate-spin rounded-full h-5 w-5 border-2 border-emerald-600 border-t-transparent"></div>
+                              <span className="font-medium">Loading more books...</span>
+                            </div>
+                          </div>
+                          <CardSkeleton count={4} viewMode={viewMode} />
+                        </div>
+                      )}
+
+                      {!isFetching && hasNextPage && (
+                        <div className="text-center">
+                          <button
+                            onClick={fetchNextPage}
+                            disabled={isFetchingNextPage}
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-xl"
+                          >
+                            {isFetchingNextPage ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                <span>Loading...</span>
+                              </>
+                            ) : (
+                              <>
+                                <BookOpen className="w-4 h-4" />
+                                <span>Load More Books</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+
+                      {!isFetching && !hasNextPage && books.length > 0 && (
+                        <div className="text-center py-12">
+                          <div className="inline-flex flex-col items-center gap-4 p-8 bg-gray-50 rounded-2xl border border-gray-200">
+                            <Award className="w-12 h-12 text-emerald-600" />
+                            <div className="text-center">
+                              <h3 className="text-lg font-semibold text-gray-900 mb-2">You've seen it all!</h3>
+                              <p className="text-gray-600">You've reached the end of our collection.</p>
+                            </div>
                           </div>
                         </div>
-                        <CardSkeleton count={4} viewMode={viewMode} />
-                      </div>
-                    )}
-                    
-                    {!isFetching && hasNextPage && (
-                      <div className="text-center">
-                        <button 
-                          onClick={fetchNextPage} 
-                          disabled={isFetchingNextPage}
-                          className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-xl"
-                        >
-                          {isFetchingNextPage ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                              <span>Loading...</span>
-                            </>
-                          ) : (
-                            <>
-                              <BookOpen className="w-4 h-4" />
-                              <span>Load More Books</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    )}
-                    
-                    {!isFetching && !hasNextPage && books.length > 0 && (
-                      <div className="text-center py-12">
-                        <div className="inline-flex flex-col items-center gap-4 p-8 bg-gray-50 rounded-2xl border border-gray-200">
-                          <Award className="w-12 h-12 text-emerald-600" />
-                          <div className="text-center">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">You've seen it all!</h3>
-                            <p className="text-gray-600">You've reached the end of our collection.</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </>
               )}
