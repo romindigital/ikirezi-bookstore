@@ -166,7 +166,7 @@ export function Header() {
         {/* Top Info Bar - Simplified */}
         <div className="bg-amber-500/80 border-b border-gray-200 hidden lg:block">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-2 text-xs text-gray-600">
+            <div className="flex justify-between items-center py-2 text-xs text-gray-900">
               {/* Contact Information Only */}
               <div className="flex items-center space-x-4">
                 {contactInfo.map((item, index) => (
@@ -178,7 +178,7 @@ export function Header() {
               </div>
 
               {/* Simple Welcome Message */}
-              <div className="text-gray-500">
+              <div className="text-gray-900">
                 Free shipping on orders over $50
               </div>
             </div>
