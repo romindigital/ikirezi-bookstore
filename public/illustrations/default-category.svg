@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Stack of books -->
+  <g transform="translate(50, 50)">
+    <!-- Book 1 -->
+    <rect x="0" y="60" width="100" height="20" rx="2" fill="#e5e7eb"/>
+    <!-- Book 2 -->
+    <rect x="5" y="40" width="90" height="20" rx="2" fill="#d1d5db"/>
+    <!-- Book 3 -->
+    <rect x="-5" y="80" width="110" height="20" rx="2" fill="#9ca3af"/>
+    <!-- Book spine details -->
+    <line x1="20" y1="62" x2="80" y2="62" stroke="#9ca3af" stroke-width="2"/>
+    <line x1="25" y1="42" x2="75" y2="42" stroke="#9ca3af" stroke-width="2"/>
+    <line x1="15" y1="82" x2="85" y2="82" stroke="#e5e7eb" stroke-width="2"/>
+  </g>
+  <!-- Attribution text -->
+  <text x="100" y="190" font-family="Arial" font-size="8" fill="#9ca3af" text-anchor="middle">Default Category Icon</text>
+</svg>

@@ -48,7 +48,10 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
+        'display': ['"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
+        'body': ['"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
+        'mono': ['"SF Mono"', '"Monaco"', '"Inconsolata"', '"Fira Code"', '"Droid Sans Mono"', '"Source Code Pro"', 'monospace'],
       },
       fontSize: {
         'desktop-5xl': ['3.5rem', { lineHeight: '1.1' }],
@@ -83,5 +86,24 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function({ addUtilities }) {
+      addUtilities({
+        '.scrollbar-hide': {
+          '-ms-overflow-style': 'none',
+          'scrollbar-width': 'none',
+          '&::-webkit-scrollbar': {
+            display: 'none'
+          },
+        },
+        '.scrollbar-default': {
+          '-ms-overflow-style': 'auto',
+          'scrollbar-width': 'auto',
+          '&::-webkit-scrollbar': {
+            display: 'block'
+          },
+        }
+      })
+    }
+  ],
 }

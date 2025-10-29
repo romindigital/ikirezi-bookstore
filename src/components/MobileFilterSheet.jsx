@@ -10,6 +10,7 @@ import {
   faTag,
   faStar
 } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from '../hooks/useTranslation';
 
 export function MobileFilterSheet({ 
   isOpen, 
@@ -20,6 +21,7 @@ export function MobileFilterSheet({
   priceRanges = [],
   sortOptions = []
 }) {
+  const { t } = useTranslation();
   const [localFilters, setLocalFilters] = useState(filters || {});
   const [activeTab, setActiveTab] = useState('filters');
 
@@ -79,8 +81,8 @@ export function MobileFilterSheet({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <FontAwesomeIcon icon={faSliders} className="w-5 h-5 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-900">Filters & Sort</h2>
+            <FontAwesomeIcon icon={faSliders} className="w-5 h-5 text-emerald-600" />
+            <h2 className="text-xl font-bold text-gray-900">{t('common.filters_and_sort') || 'Filters & Sort'}</h2>
           </div>
           <button
             onClick={onClose}
@@ -96,23 +98,23 @@ export function MobileFilterSheet({
             onClick={() => setActiveTab('filters')}
             className={`flex-1 py-3 px-4 text-center font-medium transition-colors ${
               activeTab === 'filters' 
-                ? 'text-blue-600 border-b-2 border-blue-600' 
+                ? 'text-emerald-600 border-b-2 border-green-600' 
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
             <FontAwesomeIcon icon={faFilter} className="w-4 h-4 mr-2" />
-            Filters
+            {t('common.filter')}
           </button>
           <button
             onClick={() => setActiveTab('sort')}
             className={`flex-1 py-3 px-4 text-center font-medium transition-colors ${
               activeTab === 'sort' 
-                ? 'text-blue-600 border-b-2 border-blue-600' 
+                ? 'text-emerald-600 border-b-2 border-green-600' 
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
             <FontAwesomeIcon icon={faSort} className="w-4 h-4 mr-2" />
-            Sort
+            {t('common.sort')}
           </button>
         </div>
 
@@ -124,8 +126,8 @@ export function MobileFilterSheet({
               {categories.length > 0 && (
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <FontAwesomeIcon icon={faTag} className="w-4 h-4 text-blue-600" />
-                    Categories
+                    <FontAwesomeIcon icon={faTag} className="w-4 h-4 text-emerald-600" />
+                    {t('common.categories') || t('nav.categories')}
                   </h3>
                   <div className="grid grid-cols-2 gap-3">
                     {categories.map((category) => (
@@ -134,7 +136,7 @@ export function MobileFilterSheet({
                         onClick={() => handleFilterChange('category', category === 'All' ? '' : category)}
                         className={`p-3 rounded-xl text-sm font-medium transition-all ${
                           localFilters.category === category || (category === 'All' && !localFilters.category)
-                            ? 'bg-blue-600 text-white shadow-lg'
+                            ? 'bg-emerald-600 text-white shadow-lg'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       >
@@ -149,8 +151,8 @@ export function MobileFilterSheet({
               {priceRanges.length > 0 && (
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <FontAwesomeIcon icon={faTag} className="w-4 h-4 text-blue-600" />
-                    Price Range
+                    <FontAwesomeIcon icon={faTag} className="w-4 h-4 text-emerald-600" />
+                    {t('common.price_range') || 'Price Range'}
                   </h3>
                   <div className="space-y-3">
                     {priceRanges.map((range) => (
@@ -159,7 +161,7 @@ export function MobileFilterSheet({
                         onClick={() => handleFilterChange('priceRange', range.value)}
                         className={`w-full p-3 rounded-xl text-sm font-medium transition-all text-left ${
                           localFilters.priceRange === range.value
-                            ? 'bg-blue-600 text-white shadow-lg'
+                            ? 'bg-emerald-600 text-white shadow-lg'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       >
@@ -175,8 +177,8 @@ export function MobileFilterSheet({
           {activeTab === 'sort' && (
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <FontAwesomeIcon icon={faStar} className="w-4 h-4 text-blue-600" />
-                Sort By
+                <FontAwesomeIcon icon={faStar} className="w-4 h-4 text-emerald-600" />
+                {t('common.sort_by') || 'Sort By'}
               </h3>
               <div className="space-y-3">
                 {sortOptions.map((option) => (
@@ -185,7 +187,7 @@ export function MobileFilterSheet({
                     onClick={() => handleFilterChange('sortBy', option.value)}
                     className={`w-full p-4 rounded-xl text-left transition-all ${
                       localFilters.sortBy === option.value
-                        ? 'bg-blue-600 text-white shadow-lg'
+                        ? 'bg-emerald-600 text-white shadow-lg'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
@@ -210,14 +212,14 @@ export function MobileFilterSheet({
                 onClick={clearFilters}
                 className="flex-1 py-3 px-4 text-gray-700 bg-white border border-gray-300 rounded-xl font-medium hover:bg-gray-50 transition-colors"
               >
-                Clear All
+                {t('common.clear_all') || 'Clear All'}
               </button>
             )}
             <button
               onClick={applyFilters}
-              className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg"
+              className="flex-1 py-3 px-4 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors shadow-lg"
             >
-              Apply Filters
+              {t('common.apply_filters') || t('common.apply')}
             </button>
           </div>
         </div>

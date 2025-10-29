@@ -1,25 +1,35 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  CreditCard, 
-  Lock, 
+import {
+  ShoppingBag,
+  Lock,
   Shield,
   Truck,
-  Tag,
-  Plus,
-  Minus,
-  Trash2
+  Tag
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatPrice } from '../utils/formatPrice';
 import { PaymentMethods } from '../components/PaymentMethods';
 import { PaymentProgress } from '../components/PaymentProgress';
 import { Modal } from '../components/Modal';
+import Button from '../components/ui/Button';
+import Typography from '../components/ui/Typography';
+import Card from '../components/ui/Card';
+import Input from '../components/ui/Input';
+import Icon from '../components/ui/Icon';
 
 export function Cart() {
-  const { itemCount, getCartTotal, items = [], handleQuantityChange, handleRemoveItem, isUpdating } = useCart();
+  const {
+    itemCount,
+    getCartTotal,
+    items = [],
+    handleQuantityChange,
+    handleRemoveItem,
+    isUpdating
+  } = useCart();
+
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
-  const [wizardStep, setWizardStep] = useState(1); // 1 = Select Payment, 2 = Review, 3 = Confirm
+  const [currentStep, setCurrentStep] = useState(1);
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
@@ -29,8 +39,8 @@ export function Cart() {
 
   const handlePaymentMethodChange = (method) => {
     setSelectedPaymentMethod(method);
-    if (wizardStep === 1) {
-      setWizardStep(2); // Auto-advance when payment method selected
+    if (currentStep === 1) {
+      setCurrentStep(2);
     }
   };
 
@@ -42,345 +52,344 @@ export function Cart() {
     setShowCheckoutModal(true);
   };
 
+  const handleNextStep = () => {
+    if (currentStep < 3) {
+      setCurrentStep(prev => prev + 1);
+    } else {
+      handleProceedToCheckout();
+    }
+  };
+
+  const handlePreviousStep = () => {
+    setCurrentStep(prev => Math.max(1, prev - 1));
+  };
+
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-emerald-50 py-16">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Your Cart is Empty</h1>
-          <p className="text-gray-600 mb-8">Start adding some amazing books to your cart!</p>
-          <Link 
-            to="/books"
-            className="inline-flex items-center gap-2 bg-emerald-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
-          >
-            Browse Books
-          </Link>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card.Empty
+            icon={<ShoppingBag className="w-10 h-10 text-gray-400" />}
+            title="Your Cart is Empty"
+            description="Start adding some amazing books to your cart!"
+            actions={
+              <Button to="/books" variant="primary" size="lg">
+                Browse Books
+              </Button>
+            }
+          />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-emerald-50 py-8">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <Link
+            to="/books"
+            className="inline-flex items-center text-gray-600 hover:text-emerald-600 transition-colors mb-4"
+          >
+            <Icon.ArrowLeft className="w-5 h-5 mr-2" />
+            Continue Shopping
+          </Link>
+          <Typography.PageTitle>Shopping Cart</Typography.PageTitle>
+          <Typography.Body className="text-gray-600 mt-2">
+            {itemCount} {itemCount === 1 ? 'item' : 'items'} in your cart
+          </Typography.Body>
+        </div>
+
         {/* Progress Indicator */}
-        <PaymentProgress currentStep={wizardStep} className="mb-8" />
-        
-        <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">
-            {wizardStep === 1 ? 'Select Payment Method' : 
-             wizardStep === 2 ? 'Review Payment' : 'Confirm Payment'}
-          </h1>
+        <PaymentProgress currentStep={currentStep} className="mb-8" />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Cart Items - Step 1 shows only items; Step 2+ shows items + summary */}
-            <div className={`${wizardStep === 1 ? 'lg:col-span-3' : 'lg:col-span-2'} space-y-4`}>
-              {items.map((item) => (
-                <div key={item.id} className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-start space-x-4">
-                    {/* Book Image */}
-                    <Link to={`/book/${item.id}`} className="flex-shrink-0 group">
-                      <div className="relative overflow-hidden rounded-xl">
-                        <img
-                          src={item.image}
-                          alt={item.title}
-                          className="w-24 h-32 object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300" />
-                      </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Cart Items */}
+          <div className="lg:col-span-2 space-y-4">
+            {items.map((item) => (
+              <Card.Container key={item.id} className="p-6">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {/* Book Image */}
+                  <Link
+                    to={`/book/${item.id}`}
+                    className="flex-shrink-0 w-20 h-28 sm:w-24 sm:h-32"
+                  >
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  </Link>
+
+                  {/* Book Details */}
+                  <div className="flex-1 min-w-0">
+                    <Link to={`/book/${item.id}`}>
+                      <Typography.CardTitle className="hover:text-emerald-600 transition-colors line-clamp-2">
+                        {item.title}
+                      </Typography.CardTitle>
                     </Link>
+                    <Typography.Body className="text-gray-600 mt-1">
+                      by {item.author}
+                    </Typography.Body>
 
-                    {/* Book Details */}
-                    <div className="flex-1 min-w-0">
-                      <Link to={`/book/${item.id}`}>
-                        <h3 className="text-lg font-semibold text-gray-900 hover:text-emerald-600 transition-colors">
-                          {item.title}
-                        </h3>
-                      </Link>
-                      <p className="text-gray-600 text-sm mb-2">by {item.author}</p>
-
-                      {/* Stock Warning */}
-                      {item.stock && item.quantity >= item.stock && (
-                        <div className="text-sm text-amber-600 mb-2">
-                          Only {item.stock} in stock
-                        </div>
-                      )}
-
-                      <div className="flex items-center space-x-2 mb-4">
-                        {item.discountPercent && item.discountPercent > 0 ? (
-                          <>
-                            <span className="text-lg font-bold text-gray-900">
-                              {formatPrice(item.discountPrice || item.price)}
-                            </span>
-                            <span className="text-sm text-gray-500 line-through">
-                              {formatPrice(item.price)}
-                            </span>
-                            <span className="text-sm bg-red-100 text-red-800 px-2 py-1 rounded-full">
-                              -{item.discountPercent}%
-                            </span>
-                          </>
-                        ) : (
-                          <span className="text-lg font-bold text-gray-900">
+                    {/* Price */}
+                    <div className="flex items-center gap-2 mt-3">
+                      {item.discountPercent && item.discountPercent > 0 ? (
+                        <>
+                          <Typography.Price size="md">
+                            {formatPrice(item.discountPrice || item.price)}
+                          </Typography.Price>
+                          <Typography.Muted className="line-through">
                             {formatPrice(item.price)}
+                          </Typography.Muted>
+                          <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                            -{item.discountPercent}%
                           </span>
+                        </>
+                      ) : (
+                        <Typography.Price size="md">
+                          {formatPrice(item.price)}
+                        </Typography.Price>
+                      )}
+                    </div>
+
+                    {/* Quantity Controls */}
+                    <div className="flex items-center justify-between mt-4">
+                      <Input.Quantity
+                        value={item.quantity}
+                        onChange={(newQuantity) => handleQuantityChange(item.id, newQuantity)}
+                      />
+
+                      <Button
+                        onClick={() => handleRemoveItem(item.id)}
+                        disabled={isUpdating}
+                        variant="danger"
+                        size="sm"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Item Total */}
+                  <div className="text-right">
+                    <Typography.CardTitle>
+                      {formatPrice((item.discountPrice || item.price) * item.quantity)}
+                    </Typography.CardTitle>
+                    {item.discountPercent && item.discountPercent > 0 && (
+                      <Typography.Success className="mt-1">
+                        Save {formatPrice((item.price - (item.discountPrice || item.price)) * item.quantity)}
+                      </Typography.Success>
+                    )}
+                  </div>
+                </div>
+              </Card.Container>
+            ))}
+          </div>
+
+          {/* Order Summary */}
+          <div className="lg:col-span-1">
+            <Card.Summary>
+              <Card.Header title="Order Summary" />
+
+              <Card.Content>
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <Typography.Body className="text-gray-600">
+                        Subtotal ({itemCount} items)
+                      </Typography.Body>
+                      <Typography.Body className="font-medium">
+                        {formatPrice(cartTotal.subtotal)}
+                      </Typography.Body>
+                    </div>
+
+                    <div className="flex justify-between text-sm">
+                      <Typography.Body className="text-gray-600 flex items-center gap-1">
+                        <Truck className="w-4 h-4" />
+                        Shipping
+                      </Typography.Body>
+                      <Typography.Body className="font-medium">
+                        {cartTotal.subtotal >= 50 ? (
+                          <Typography.Accent>Free</Typography.Accent>
+                        ) : (
+                          formatPrice(9.99)
                         )}
-                      </div>
-
-                      {/* Quantity Controls */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
-                          <button
-                            onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                            disabled={isUpdating || item.quantity <= 1}
-                            className="p-3 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                          >
-                            <Minus className="w-4 h-4" />
-                          </button>
-                          <span className="px-6 py-3 border-x border-gray-200 min-w-[4rem] text-center font-semibold text-gray-900">
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                            disabled={isUpdating || (item.stock && item.quantity >= item.stock)}
-                            className="p-3 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                        </div>
-
-                        <button
-                          onClick={() => handleRemoveItem(item.id)}
-                          disabled={isUpdating}
-                          className="text-red-600 hover:text-red-700 p-3 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      </Typography.Body>
                     </div>
 
-                    {/* Item Total */}
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-gray-900">
-                        {formatPrice((item.discountPrice || item.price) * item.quantity)}
+                    {cartTotal.savings > 0 && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <Typography.Body className="flex items-center gap-1">
+                          <Tag className="w-4 h-4" />
+                          Discount
+                        </Typography.Body>
+                        <Typography.Body className="font-medium">
+                          -{formatPrice(cartTotal.savings)}
+                        </Typography.Body>
                       </div>
-                      {item.discountPercent && item.discountPercent > 0 && (
-                        <div className="text-sm text-green-600">
-                          Save {formatPrice((item.price - (item.discountPrice || item.price)) * item.quantity)}
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
-                </div>
-              ))}
-            </div>
 
-            {/* Global Step 1 action: Analyze & Proceed (shown when on step 1) */}
-            {wizardStep === 1 && (
-              <div className="lg:col-span-3">
-                <div className="mt-6 mb-8 flex justify-center">
-                  <div className="max-w-xl w-full text-center">
-                    <p className="text-gray-600 mb-4">Click analyze to review promotions and proceed with checkout steps.</p>
-                    <button
-                      onClick={() => setWizardStep(2)}
-                      className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3 px-6 rounded-xl font-bold hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 shadow-lg"
-                    >
-                      Analyze & Proceed
-                    </button>
+                  <div className="border-t border-gray-200 pt-4">
+                    <div className="flex justify-between text-lg font-bold text-gray-900">
+                      <Typography.Body>Total</Typography.Body>
+                      <Typography.Body>{formatPrice(finalTotal)}</Typography.Body>
+                    </div>
+                    {cartTotal.subtotal < 50 && (
+                      <Typography.Small className="text-gray-600 mt-2">
+                        Add {formatPrice(50 - cartTotal.subtotal)} more for free shipping
+                      </Typography.Small>
+                    )}
                   </div>
-                </div>
-              </div>
-            )}
 
-            {/* Order Summary - hidden in step 1 */}
-            {wizardStep > 1 && (
-              <div className="lg:col-span-1">
-                <div className="bg-white rounded-2xl shadow-lg p-8 sticky top-8 border border-gray-100">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Order Summary</h2>
-
-                  <div className="space-y-6">
-                    <div className="space-y-4">
-                      <div className="flex justify-between text-base">
-                        <span className="text-gray-600">Items ({itemCount})</span>
-                        <span className="text-gray-900 font-semibold">{formatPrice(cartTotal.subtotal)}</span>
-                      </div>
-
-                      <div className="flex justify-between text-base">
-                        <span className="text-gray-600 flex items-center">
-                          <Truck className="w-4 h-4 mr-1" />
-                          Shipping
-                        </span>
-                        <span className="text-gray-900 font-semibold">
-                          {cartTotal.subtotal >= 50 ? (
-                            <span className="text-green-600 font-bold">Free</span>
-                          ) : (
-                            formatPrice(9.99)
-                          )}
-                        </span>
-                      </div>
-
-                      {cartTotal.savings > 0 && (
-                        <div className="flex justify-between text-base text-green-600">
-                          <span className="flex items-center">
-                            <Tag className="w-4 h-4 mr-1" />
-                            Discount
-                          </span>
-                          <span className="font-bold">-{formatPrice(cartTotal.savings)}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="border-t-2 border-gray-200 pt-6">
-                      <div className="flex justify-between text-xl font-bold text-gray-900">
-                        <span>Total</span>
-                        <span className="text-2xl">{formatPrice(finalTotal)}</span>
-                      </div>
-                      {cartTotal.subtotal < 50 && (
-                        <p className="text-sm text-gray-600 mt-2">
-                          Add {formatPrice(50 - cartTotal.subtotal)} more for free shipping!
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Payment Method Selection */}
-                    <div className="mt-6 pt-6 border-t border-gray-200">
-                      <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center">
-                        <CreditCard className="w-4 h-4 mr-2" />
+                  {/* Payment Method Section - Only show from step 2 onwards */}
+                  {currentStep >= 2 && (
+                    <div className="border-t border-gray-200 pt-6 mt-6">
+                      <Typography.SmallTitle className="mb-4 flex items-center gap-2">
                         Payment Method
-                      </h3>
+                      </Typography.SmallTitle>
 
                       {!showPaymentMethods ? (
                         <div className="space-y-3">
                           {selectedPaymentMethod ? (
                             <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
-                              <span className="text-sm font-medium text-green-800">
-                                {selectedPaymentMethod.replace('_', ' ').toUpperCase()} selected
-                              </span>
-                              <button
+                              <Typography.Body className="font-medium text-green-800 capitalize">
+                                {selectedPaymentMethod.replace('_', ' ')}
+                              </Typography.Body>
+                              <Button
                                 onClick={() => setShowPaymentMethods(true)}
-                                className="text-sm text-green-600 hover:text-green-700"
+                                variant="ghost"
+                                size="sm"
                               >
                                 Change
-                              </button>
+                              </Button>
                             </div>
                           ) : (
-                            <button
+                            <Button
                               onClick={() => setShowPaymentMethods(true)}
-                              className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700 transition-colors"
+                              variant="outline"
+                              className="w-full"
                             >
                               Select Payment Method
-                            </button>
+                            </Button>
                           )}
                         </div>
                       ) : (
                         <PaymentMethods
                           selectedMethod={selectedPaymentMethod}
                           onMethodChange={handlePaymentMethodChange}
-                          className="mb-4"
                         />
                       )}
                     </div>
+                  )}
 
-                    <div className="mt-8 space-y-4">
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => setWizardStep(prev => Math.max(1, prev - 1))}
-                          className="flex-1 border-2 border-gray-300 text-gray-700 py-3 px-4 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-300"
-                        >
-                          Previous
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            if (wizardStep < 3) {
-                              setWizardStep(prev => prev + 1);
-                            } else {
-                              handleProceedToCheckout();
-                            }
-                          }}
-                          className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3 px-4 rounded-xl font-bold hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 shadow-lg"
-                        >
-                          {wizardStep < 3 ? 'Next' : 'Proceed to Checkout'}
-                        </button>
-                      </div>
-
-                      <Link
-                        to="/books"
-                        className="w-full block text-center border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300"
+                  {/* Action Buttons */}
+                  <div className="space-y-3 pt-6">
+                    {currentStep === 1 ? (
+                      <Button
+                        onClick={() => setCurrentStep(2)}
+                        variant="primary"
+                        size="lg"
+                        className="w-full"
                       >
-                        Continue Shopping
-                      </Link>
-                    </div>
-
-                    {/* Security Badge */}
-                    <div className="mt-6 pt-6 border-t border-gray-200">
-                      <div className="flex items-center justify-center text-xs text-gray-500">
-                        <Shield className="w-4 h-4 mr-1" />
-                        <span>Secure checkout with SSL encryption</span>
+                        Continue to Payment
+                      </Button>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex gap-3">
+                          <Button
+                            onClick={handlePreviousStep}
+                            variant="outline"
+                            className="flex-1"
+                          >
+                            Back
+                          </Button>
+                          <Button
+                            onClick={handleNextStep}
+                            disabled={currentStep >= 2 && !selectedPaymentMethod}
+                            variant="primary"
+                            className="flex-1"
+                          >
+                            {currentStep < 3 ? 'Next' : 'Checkout'}
+                          </Button>
+                        </div>
                       </div>
-                    </div>
+                    )}
+
+                    <Button
+                      to="/books"
+                      variant="outline"
+                      className="w-full"
+                    >
+                      Continue Shopping
+                    </Button>
                   </div>
+
+                  {/* Security Badge */}
+                  <Card.Footer>
+                    <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                      <Shield className="w-4 h-4" />
+                      <Typography.Muted>Secure checkout with SSL encryption</Typography.Muted>
+                    </div>
+                  </Card.Footer>
                 </div>
-              </div>
-            )}
+              </Card.Content>
+            </Card.Summary>
           </div>
         </div>
       </div>
 
       {/* Checkout Modal */}
-      <Modal 
-        isOpen={showCheckoutModal} 
-        onClose={() => setShowCheckoutModal(false)} 
-        title="Checkout" 
-        size="xl"
+      <Modal
+        isOpen={showCheckoutModal}
+        onClose={() => setShowCheckoutModal(false)}
+        title="Proceed to Checkout"
+        size="lg"
       >
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-              <CreditCard className="w-4 h-4 mr-2" />
-              Payment Method
-            </h3>
-            <PaymentMethods
-              selectedMethod={selectedPaymentMethod}
-              onMethodChange={setSelectedPaymentMethod}
-              className="mb-4"
-            />
-          </div>
-          <div className="bg-gray-50 rounded-xl p-6 border border-gray-200 h-fit">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h4>
+        <div className="space-y-6">
+          <Card.Container className="p-4">
+            <Typography.SmallTitle className="mb-3">Order Summary</Typography.SmallTitle>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span>Items ({itemCount})</span>
-                <span>{formatPrice(cartTotal.subtotal)}</span>
+                <Typography.Body>Items ({itemCount})</Typography.Body>
+                <Typography.Body>{formatPrice(cartTotal.subtotal)}</Typography.Body>
               </div>
               <div className="flex justify-between">
-                <span>Shipping</span>
-                <span>{cartTotal.subtotal >= 50 ? 'Free' : formatPrice(9.99)}</span>
+                <Typography.Body>Shipping</Typography.Body>
+                <Typography.Body>{cartTotal.subtotal >= 50 ? 'Free' : formatPrice(9.99)}</Typography.Body>
               </div>
               {cartTotal.savings > 0 && (
                 <div className="flex justify-between text-green-600">
-                  <span>Discount</span>
-                  <span>-{formatPrice(cartTotal.savings)}</span>
+                  <Typography.Body>Discount</Typography.Body>
+                  <Typography.Body>-{formatPrice(cartTotal.savings)}</Typography.Body>
                 </div>
               )}
-              <div className="flex justify-between font-bold border-t border-gray-200 pt-2">
-                <span>Total</span>
-                <span>{formatPrice(finalTotal)}</span>
+              <div className="flex justify-between font-bold border-t border-gray-200 pt-2 mt-2">
+                <Typography.Body>Total</Typography.Body>
+                <Typography.Body>{formatPrice(finalTotal)}</Typography.Body>
               </div>
             </div>
-            <div className="mt-6 space-y-3">
-              <button
-                onClick={() => window.location.href = `/checkout?payment=${selectedPaymentMethod}`}
-                className="w-full bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
-              >
-                <Lock className="w-5 h-5 mr-2 inline-block" />
-                Continue to Full Checkout
-              </button>
-              <button
-                onClick={() => setShowCheckoutModal(false)}
-                className="w-full border-2 border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-            </div>
+          </Card.Container>
+
+          <div className="space-y-3">
+            <Button
+              onClick={() => window.location.href = `/checkout?payment=${selectedPaymentMethod}`}
+              variant="primary"
+              size="lg"
+              className="w-full"
+              icon={<Lock className="w-4 h-4" />}
+            >
+              Proceed to Secure Checkout
+            </Button>
+            <Button
+              onClick={() => setShowCheckoutModal(false)}
+              variant="outline"
+              className="w-full"
+            >
+              Continue Shopping
+            </Button>
           </div>
         </div>
       </Modal>

@@ -6,6 +6,7 @@ import { Footer } from '../components/Footer';
 import { Home } from '../pages/Home';
 import { Books } from '../pages/Books';
 import { Categories } from '../pages/Categories';
+import Orders from '../pages/Orders'
 import { About } from '../pages/About';
 import { Contact } from '../pages/Contact';
 import { Privacy } from '../pages/Privacy';
@@ -21,6 +22,7 @@ import { Register } from '../pages/Register';
 import { ForgotPassword } from '../pages/ForgotPassword';
 import { UserProfile } from '../pages/UserProfile';
 import { AdminDashboard } from '../pages/AdminDashboard';
+import CategoryPage from '../pages/categories/CategoryPage';
 import { BooksManagement } from '../pages/admin/BooksManagement';
 import { UsersManagement } from '../pages/admin/UsersManagement';
 import { Analytics } from '../pages/admin/Analytics';
@@ -41,6 +43,8 @@ function AppRoutes() {
                   <Route path="/" element={<Home />} />
                   <Route path="/books" element={<Books />} />
                   <Route path="/categories" element={<Categories />} />
+                  <Route path="/categories/:category" element={<CategoryPage />} />
+                  <Route path="/categories/:category/:subcategory" element={<CategoryPage />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/privacy" element={<Privacy />} />
@@ -53,55 +57,61 @@ function AppRoutes() {
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route 
-                    path="/checkout" 
+                  <Route
+                    path="/checkout"
                     element={
                       <ProtectedRoute>
                         <Checkout />
                       </ProtectedRoute>
-                    } 
+                    }
                   />
-                  <Route 
-                    path="/profile" 
+                  <Route
+                    path="/profile"
                     element={
                       <ProtectedRoute>
                         <UserProfile />
                       </ProtectedRoute>
-                    } 
+                    }
+                  />
+                  <Route
+                    path="/orders"
+                    element={
+                      <Orders />
+                    }
                   />
                 </Routes>
               </main>
               <Footer />
             </div>
           } />
-          
+
           {/* Admin Routes with AdminLayout only */}
-          <Route 
-            path="/admin" 
+          <Route
+            path="/admin"
             element={
               <AdminLayout>
                 <AdminDashboard />
               </AdminLayout>
             }
           />
-          <Route 
-            path="/admin/books" 
+          <Route
+            path="/admin/books"
             element={
               <AdminLayout>
                 <BooksManagement />
               </AdminLayout>
             }
           />
-          <Route 
-            path="/admin/users" 
+          <Route
+            path="/admin/users"
             element={
               <AdminLayout>
                 <UsersManagement />
               </AdminLayout>
             }
           />
-          <Route 
-            path="/admin/analytics" 
+          <Route
+            path="/admin/analytics"
             element={
               <AdminLayout>
                 <Analytics />

@@ -1,42 +1,33 @@
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useDebounce } from '../hooks/useDebounce';
 import { Link, useSearchParams } from 'react-router-dom';
 import { bookService } from '../services/bookService';
 import { trackPageView, trackInteraction } from '../services/analyticsService';
 import { useCart } from '../context/CartContext';
-import { BookCard } from '../components/BookCard';
-import { CardSkeleton } from '../components/BookCard'; 
+// import { CardSkeleton } from '../components/BookCard';
 import { SEOHead } from '../components/SEOHead';
-// import { FilterPanel } from '../components/FilterPanel';
-import CompactBookCard from '../components/CompactBookCard';
+import { CompactBookCard, PremiumCarousel } from '../components/CompactBookCard';
 import { MobileFilterSheet } from '../components/MobileFilterSheet';
-import { PaginationControls } from '../components/PaginationControls';
 import { FloatingElements } from '../components/AdvancedParallax';
-import { 
-  Filter, X, Grid, List, BookOpen, Search, ShoppingCart, 
-  Heart, ChevronRight, SlidersHorizontal, Star, TrendingUp,
-  Clock, DollarSign, User, Award, Sparkles, RotateCcw,
-  AlertCircle, GitCompare
+import { useTranslation } from '../hooks/useTranslation';
+import {
+  Filter, X, BookOpen, Search,
+  Heart, SlidersHorizontal, Star, TrendingUp,
+  Clock, DollarSign, User, Award, Sparkles,
+  AlertCircle, ChevronLeft, ChevronRight
 } from 'lucide-react';
-
-// Swiper for horizontal carousels
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { FreeMode, Navigation } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/free-mode';
-import 'swiper/css/navigation';
 
 // Empty State Component
 const EmptyState = ({ searchQuery, selectedCategory, onClearFilters }) => (
   <div className="text-center py-16 px-4">
     <div className="max-w-md mx-auto">
-      <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
         <BookOpen className="w-10 h-10 text-gray-400" />
       </div>
-      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+      <h3 className="text-2xl font-bold text-gray-900 mb-3">
         No books found
       </h3>
-      <p className="text-gray-600 mb-6">
+      <p className="text-gray-600 mb-8 text-lg">
         {searchQuery ? (
           `No results found for "${searchQuery}". Try adjusting your search terms.`
         ) : selectedCategory ? (
@@ -45,16 +36,16 @@ const EmptyState = ({ searchQuery, selectedCategory, onClearFilters }) => (
           'No books match your current filters. Try adjusting your criteria.'
         )}
       </p>
-      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+      <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <button
           onClick={onClearFilters}
-          className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+          className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 font-semibold"
         >
           Clear All Filters
         </button>
         <Link
           to="/books"
-          className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:border-emerald-600 hover:text-emerald-600 transition-colors font-medium"
+          className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-green-500 hover:text-emerald-600 transition-all duration-300 font-semibold"
         >
           Browse All Books
         </Link>
@@ -62,63 +53,6 @@ const EmptyState = ({ searchQuery, selectedCategory, onClearFilters }) => (
     </div>
   </div>
 );
-
-// Compare Drawer Component
-const CompareDrawer = ({ selectedBooks, books, onClose, onClearSelection }) => {
-  const selectedBookData = books.filter(book => selectedBooks.includes(book.id));
-  
-  return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-50 transform transition-transform duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <Compare className="w-5 h-5 text-emerald-600" />
-            <h3 className="font-semibold text-gray-900">
-              Compare Books ({selectedBookData.length})
-            </h3>
-          </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={onClearSelection}
-              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Clear All
-            </button>
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-gray-100 rounded transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-        
-        <div className="flex space-x-4 overflow-x-auto pb-2">
-          {selectedBookData.map(book => (
-            <div key={book.id} className="flex-shrink-0 w-32">
-              <img
-                src={book.image}
-                alt={book.title}
-                className="w-full h-40 object-cover rounded-lg mb-2"
-              />
-              <p className="text-sm font-medium text-gray-900 line-clamp-2">
-                {book.title}
-              </p>
-            </div>
-          ))}
-        </div>
-        
-        {selectedBookData.length >= 2 && (
-          <div className="mt-4 text-center">
-            <button className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium">
-              Compare Now
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
 
 // Enhanced useBooksQuery hook with better error handling
 function useBooksQuery(filters) {
@@ -169,8 +103,6 @@ function useBooksQuery(filters) {
     }
   }, [filters]);
 
-  // We intentionally omit `fetchPage` from deps because it's recreated per-hook call
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const controller = new AbortController();
     setData({ pages: [], pageParams: [1] });
@@ -192,7 +124,7 @@ function useBooksQuery(filters) {
   };
 }
 
-const CATEGORIES = ['All', 'Fiction', 'Mystery', 'Romance', 'Sci-Fi', 'Biography'];
+const CATEGORIES = ['All', 'Fiction', 'Mystery', 'Romance', 'Sci-Fi', 'Biography', 'History', 'Business'];
 const SORT_OPTIONS = [
   { value: 'popular', label: 'Most Popular', icon: TrendingUp },
   { value: 'newest', label: 'Newest First', icon: Clock },
@@ -202,32 +134,67 @@ const SORT_OPTIONS = [
   { value: 'title', label: 'Title A-Z', icon: BookOpen },
   { value: 'author', label: 'Author A-Z', icon: User },
 ];
-const VIEW_OPTIONS = [
-  { value: 'grid', label: 'Grid', icon: Grid },
-  { value: 'list', label: 'List', icon: List },
-];
+
+// Custom Carousel with Loop - Limited to 20 books per row
+const LoopCarousel = ({ books, title, subtitle, onAddToCart, categorySlug }) => {
+  const { t } = useTranslation();
+  // Limit to 20 books per row and use only unique books
+  const displayBooks = books.slice(0, 20);
+
+  return (
+    <PremiumCarousel title={title} subtitle={subtitle}>
+      {displayBooks.map((book) => (
+        <CompactBookCard
+          key={book.id}
+          book={book}
+          onAddToCart={onAddToCart}
+        />
+      ))}
+      {/* View All Link */}
+      {books.length > 20 && (
+        <div className="flex items-center justify-center w-48 h-full">
+          <Link
+            to={`/categories/${categorySlug || 'all'}`}
+            className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 border-2 border-dashed border-emerald-300 hover:border-emerald-400 rounded-2xl transition-all duration-300 group"
+          >
+            <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+            <span className="text-emerald-700 font-semibold text-sm group-hover:text-emerald-800">
+              {t('common.view_all')}
+            </span>
+            <span className="text-emerald-600 text-xs mt-1">
+              {books.length - 20} more
+            </span>
+          </Link>
+        </div>
+      )}
+    </PremiumCarousel>
+  );
+};
 
 export function Books() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { addToCart } = useCart();
+  const { t } = useTranslation();
 
   // URL State
-  const viewMode = searchParams.get('view') || 'grid';
   const sortBy = searchParams.get('sort') || 'popular';
   const searchQuery = searchParams.get('q') || '';
   const selectedCategory = searchParams.get('category') || '';
   const priceRange = searchParams.get('price') || '';
-  const compareMode = searchParams.get('compare') === 'true';
 
   // Local State
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedBooks, setSelectedBooks] = useState([]);
-  const [searchSuggestions, setSearchSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchInput, setSearchInput] = useState(searchQuery);
-  const [showCompareDrawer, setShowCompareDrawer] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-  
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const scrollRef = useRef(null);
+
   const debouncedSearchQuery = useDebounce(searchInput, 300);
 
   // Filters for data hook
@@ -251,24 +218,15 @@ export function Books() {
     return () => window.removeEventListener('resize', update);
   }, []);
 
-  // Show compare drawer when books are selected
-  useEffect(() => {
-    setShowCompareDrawer(selectedBooks.length > 0);
-  }, [selectedBooks.length]);
-
   // Data fetching
-  const { 
-    data: books, 
-    isLoading, 
-    isFetching, 
-    isFetchingNextPage, 
-    hasNextPage, 
-    fetchNextPage,
+  const {
+    data: books,
+    isLoading,
     error,
-    totalItems 
+    totalItems
   } = useBooksQuery(filters);
 
-  // Build dynamic category buckets from loaded books (Barnes & Noble-like rows)
+  // Build dynamic category buckets from loaded books
   const categoryBuckets = useMemo(() => {
     if (!books || books.length === 0) return [];
 
@@ -286,25 +244,9 @@ export function Books() {
       .map(([name, list]) => ({ name, list }))
       .sort((a, b) => b.list.length - a.list.length);
 
-    // Limit to top 8 categories for performance/clarity
-    return buckets.slice(0, 8);
+    return buckets.slice(0, 6);
   }, [books]);
 
-  // Infinite Scroll
-  const observer = useRef(null);
-  const infiniteScrollRef = useCallback(node => {
-    if (isFetching) return;
-    if (observer.current) observer.current.disconnect();
-
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasNextPage) {
-        trackInteraction('infinite_scroll', 'load_more');
-        fetchNextPage();
-      }
-    }, { threshold: 0.5 });
-
-    if (node) observer.current.observe(node);
-  }, [isFetching, hasNextPage, fetchNextPage]);
 
   // Handlers
   const handleUpdateSearchParams = (key, value, removeIfEmpty = true) => {
@@ -318,11 +260,33 @@ export function Books() {
       return newParams;
     }, { replace: true });
   };
+
+  // Drag handlers for smooth scrolling
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2; // Scroll speed multiplier
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
   
   const handleSearch = (query) => {
     setSearchInput(query);
     handleUpdateSearchParams('q', query);
-    setShowSuggestions(false);
     trackInteraction('search', 'books_search', query);
   };
 
@@ -331,27 +295,10 @@ export function Books() {
     trackInteraction('filter', 'category_filter', category);
   };
 
-  const handlePriceRangeChange = (priceRange) => {
-    handleUpdateSearchParams('price', priceRange);
-    trackInteraction('filter', 'price_filter', priceRange);
-  };
-  
   const handleSortChange = (value) => {
     handleUpdateSearchParams('sort', value);
     trackInteraction('sort', 'books_sort', value);
   };
-
-  const handleViewModeChange = (mode) => {
-    handleUpdateSearchParams('view', mode);
-    trackInteraction('view_mode_change', 'books_view_mode', mode);
-  };
-
-  const toggleCompareMode = () => {
-    handleUpdateSearchParams('compare', compareMode ? '' : 'true');
-    setSelectedBooks([]);
-    trackInteraction('toggle', 'compare_mode', compareMode ? 'off' : 'on');
-  };
-
 
 
   const handleAddToCart = (book) => {
@@ -361,29 +308,12 @@ export function Books() {
 
   const handleSearchInput = (query) => {
     setSearchInput(query);
-    
-    if (query.length > 2) {
-      const suggestions = books.filter(b => 
-        b.title.toLowerCase().includes(query.toLowerCase()) ||
-        b.author.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 5);
-      setSearchSuggestions(suggestions);
-      setShowSuggestions(true);
-    } else {
-      setSearchSuggestions([]);
-      setShowSuggestions(false);
-    }
   };
 
   const clearAllFilters = () => {
     setSearchParams({}, { replace: true });
-    setSelectedBooks([]);
     setShowFilters(false);
     trackInteraction('filter', 'clear_all_filters');
-  };
-
-  const clearSelection = () => {
-    setSelectedBooks([]);
   };
 
   const getActiveFiltersCount = useMemo(() => {
@@ -409,35 +339,40 @@ export function Books() {
     return `Browse our collection of ${totalItems} books. Find bestsellers, new releases, and exclusive titles with free shipping.`;
   }, [searchQuery, selectedCategory, totalItems]);
 
-  if (isLoading) {
-    return (
-      <main className="min-h-screen bg-gray-50">
-        <SEOHead title="Loading Books..." />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-8">All Books</h1>
-          <CardSkeleton count={24} viewMode={viewMode} />
-        </div>
-      </main>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50/30">
+  //       <SEOHead title={t('common.loading')} />
+  //       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  //         <div className="text-center mb-12">
+  //           <h1 className="text-4xl font-bold text-gray-900 mb-4">{t('home.title')}</h1>
+  //           <p className="text-xl text-gray-600">{t('common.loading')}</p>
+  //         </div>
+  //         {/* <CardSkeleton count={12} viewMode={viewMode} /> */}
+  //       </div>
+  //     </main>
+  //   );
+  // }
 
   if (error && books.length === 0) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center p-8 bg-white shadow-xl rounded-lg max-w-md">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Unable to Load Books</h1>
+      <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50/30 flex items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-md mx-4">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="w-10 h-10 text-red-500" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">Unable to Load Books</h1>
           <p className="text-gray-600 mb-6">We encountered an error while loading the books. This might be a temporary issue.</p>
           <div className="space-y-3">
             <button 
               onClick={() => window.location.reload()}
-              className="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-purple-600 text-white rounded-xl hover:from-green-700 hover:to-purple-700 transition-all duration-300 font-semibold shadow-lg"
             >
               Try Again
             </button>
             <Link
               to="/"
-              className="block px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:border-emerald-600 hover:text-emerald-600 transition-colors font-medium"
+              className="block px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-green-500 hover:text-green-600 transition-all duration-300 font-semibold"
             >
               Go Home
             </Link>
@@ -455,108 +390,215 @@ export function Books() {
         keywords={`books, ${selectedCategory || ''}, ${searchQuery || ''}, bookstore, reading`}
       />
       
-      <main className="min-h-screen bg-gray-50 relative">
-        <FloatingElements count={8} intensity={0.1} />
+      <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50/30 relative">
+        <FloatingElements count={12} intensity={0.15} />
 
-        <div className="max-w-full px-2 sm:px-4 lg:px-6 py-10 relative z-10">
-
-          {/* Main Content */}
-          <div className="flex gap-6 pt-8">
-
-            {/* Mobile Controls + Sheet (small screens only) */}
-            <div className="lg:hidden w-full">
-              <div className="sticky top-16 z-20 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-b border-gray-200">
-                <div className="px-2 py-3 flex items-center gap-2">
-                  <button
-                    onClick={() => setShowFilters(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm hover:border-emerald-500 hover:text-emerald-600"
-                  >
-                    <SlidersHorizontal className="w-4 h-4" />
-                    <span className="text-sm font-medium">Filters</span>
-                    {getActiveFiltersCount > 0 && (
-                      <span className="ml-1 text-xs bg-emerald-600 text-white rounded-full px-2 py-0.5">
-                        {getActiveFiltersCount}
-                      </span>
-                    )}
-                  </button>
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      value={searchInput}
-                      onChange={(e) => handleSearchInput(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchInput)}
-                      placeholder="Search in books..."
-                      className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    />
-                  </div>
-                </div>
-              </div>
-              {!isDesktop && (
-                <MobileFilterSheet
-                  isOpen={showFilters}
-                  onClose={() => setShowFilters(false)}
-                  filters={{
-                    category: selectedCategory,
-                    search: searchQuery,
-                    sortBy: sortBy,
-                    priceRange: priceRange
-                  }}
-                  onFiltersChange={(newFilters) => {
-                    handleCategoryChange(newFilters.category || '');
-                    handleSearch(newFilters.search || '');
-                    handleSortChange(newFilters.sortBy || 'popular');
-                    handlePriceRangeChange(newFilters.priceRange || '');
-                  }}
-                  categories={CATEGORIES}
-                  priceRanges={[
-                    { value: '0-10', label: 'Under $10' },
-                    { value: '10-25', label: '$10 - $25' },
-                    { value: '25-50', label: '$25 - $50' },
-                    { value: '50+', label: 'Over $50' }
-                  ]}
-                  sortOptions={SORT_OPTIONS}
-                />
-              )}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+          {/* Dynamic Hero Section with Categories */}
+          <div className="relative rounded-3xl overflow-hidden mb-8" style={{
+            background: 'linear-gradient(-45deg, #ecfdf5, #f0fdf4, #dcfce7, #bbf7d0, #a7f3d0, #6ee7b7)',
+            backgroundSize: '400% 400%',
+            // animation: 'gradientShift 15s ease infinite'
+          }}>
+            {/* Animated Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <svg className="w-full h-full" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <pattern id="animated-books-pattern" x="0" y="0" width="25" height="25" patternUnits="userSpaceOnUse">
+                    <rect width="25" height="25" fill="none"/>
+                    <path d="M3,3 L22,3 L22,22 L3,22 Z" fill="none" stroke="currentColor" strokeWidth="0.8"/>
+                    <circle cx="8" cy="8" r="1.5" fill="currentColor"/>
+                    <circle cx="17" cy="17" r="1.5" fill="currentColor"/>
+                    <rect x="5" y="12" width="15" height="1" fill="currentColor" opacity="0.6"/>
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#animated-books-pattern)" style={{
+                  animation: 'patternMove 20s linear infinite'
+                }}/>
+              </svg>
             </div>
 
-            {/* Left Sidebar: Search + Filters */}
-            <aside className="hidden lg:block w-80 flex-shrink-0">
-              <div className="sticky top-24 space-y-4">
-                {/* Sidebar Search */}
-                <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-3">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      value={searchInput}
-                      onChange={(e) => handleSearchInput(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchInput)}
-                      placeholder="Search in books..."
-                      className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    />
+            {/* Hero Content */}
+            <div className="relative z-10 p-8 md:p-12 pb-24">
+              <div className="text-center mb-8">
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-light text-gray-900 mb-6" style={{
+                  fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                  letterSpacing: '-0.03em',
+                  lineHeight: '1.1',
+                  animation: 'textGlow 4s ease-in-out infinite alternate'
+                }}>
+                  Discover Your Next
+                  <span className="block text-emerald-600 font-normal" style={{
+                    animation: 'colorShift 8s ease-in-out infinite'
+                  }}>Great Read</span>
+                </h1>
+                <p className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto font-normal" style={{
+                  fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                  letterSpacing: '-0.01em',
+                  lineHeight: '1.6'
+                }}>
+                  Explore thousands of books across all genres. From bestsellers to hidden gems, find your perfect story.
+                </p>
+
+                {/* Stats */}
+                <div className="flex justify-center gap-8 md:gap-12 mt-8">
+                  <div className="text-center">
+                    <div className="text-2xl md:text-3xl font-light text-gray-900" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>10,000+</div>
+                    <div className="text-sm text-gray-600 font-normal">Books</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl md:text-3xl font-light text-gray-900" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>50+</div>
+                    <div className="text-sm text-gray-600 font-normal">Categories</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl md:text-3xl font-light text-gray-900" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>24/7</div>
+                    <div className="text-sm text-gray-600 font-normal">Access</div>
                   </div>
                 </div>
               </div>
-            </aside>
 
-            {/* Books Listings */}
-            <section className="flex-1 min-w-0">
-              {/* Section Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    {books.length} {books.length === 1 ? 'Book' : 'Books'}
-                  </h2>
-                  {selectedCategory && (
-                    <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm font-medium">
-                      {selectedCategory}
-                    </span>
-                  )}
+              {/* Categories Attached to Bottom of Hero */}
+              <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm border-t border-gray-200 rounded-b-3xl">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-gray-900 text-sm" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>Browse by Category</h3>
+                    <div className="flex items-center gap-2">
+                      <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Horizontal Category Cards - Draggable Scroll */}
+                  <div className="relative">
+                    <div className="overflow-hidden">
+                      <div
+                        ref={scrollRef}
+                        className={`flex gap-4 pb-2 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                        style={{
+                          scrollBehavior: 'smooth',
+                          scrollbarWidth: 'none',
+                          msOverflowStyle: 'none'
+                        }}
+                        onMouseDown={handleMouseDown}
+                        onMouseLeave={handleMouseLeave}
+                        onMouseUp={handleMouseUp}
+                        onMouseMove={handleMouseMove}
+                      >
+                        {CATEGORIES.map((category) => (
+                          <button
+                            key={category}
+                            onClick={() => handleCategoryChange(category)}
+                            className={`flex-shrink-0 flex items-center gap-3 px-6 py-4 rounded-xl border transition-all duration-200 min-w-0 ${
+                              selectedCategory === (category === 'All' ? '' : category)
+                                ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                                : 'bg-white text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50'
+                            }`}
+                            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', minWidth: '180px' }}
+                          >
+                            {/* Category Icon */}
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                              selectedCategory === (category === 'All' ? '' : category)
+                                ? 'bg-white/20'
+                                : 'bg-emerald-100'
+                            }`}>
+                              <span className={`text-sm ${
+                                selectedCategory === (category === 'All' ? '' : category)
+                                  ? 'text-white'
+                                  : 'text-emerald-600'
+                              }`}>
+                                {category === 'All' ? '📚' :
+                                 category === 'Fiction' ? '📖' :
+                                 category === 'Mystery' ? '🔍' :
+                                 category === 'Romance' ? '💕' :
+                                 category === 'Sci-Fi' ? '🚀' :
+                                 category === 'Biography' ? '👤' :
+                                 category === 'History' ? '📜' :
+                                 category === 'Business' ? '💼' : '📚'}
+                              </span>
+                            </div>
+
+                            {/* Category Text */}
+                            <div className="text-left min-w-0">
+                              <div className={`text-sm font-medium truncate ${
+                                selectedCategory === (category === 'All' ? '' : category)
+                                  ? 'text-white'
+                                  : 'text-gray-900'
+                              }`}>
+                                {category}
+                              </div>
+                              <div className={`text-xs ${
+                                selectedCategory === (category === 'All' ? '' : category)
+                                  ? 'text-white/80'
+                                  : 'text-gray-500'
+                              }`}>
+                                {category === 'All' ? 'All books' : `${Math.floor(Math.random() * 500) + 50} books`}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Custom Scrollbar Styling */}
+                    <style jsx>{`
+                      div::-webkit-scrollbar {
+                        display: none;
+                      }
+                      div {
+                        -ms-overflow-style: none;
+                        scrollbar-width: none;
+                      }
+                    `}</style>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Books Content */}
+          <section className="flex-1 min-w-0">
+              {/* Mobile Controls */}
+              <div className="lg:hidden mb-6">
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setShowFilters(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors font-medium"
+                    >
+                      <SlidersHorizontal className="w-4 h-4" />
+                      <span>{t('common.filter')}</span>
+                      {getActiveFiltersCount > 0 && (
+                        <span className="bg-green-600 text-white rounded-full px-2 py-1 text-xs">
+                          {getActiveFiltersCount}
+                        </span>
+                      )}
+                    </button>
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        value={searchInput}
+                        onChange={(e) => handleSearchInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchInput)}
+                        placeholder={t('common.search')}
+                        className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Books Grid/List */}
+              
+
+              {/* Books Content */}
               {books.length === 0 ? (
                 <EmptyState 
                   searchQuery={searchQuery}
@@ -564,129 +606,56 @@ export function Books() {
                   onClearFilters={clearAllFilters}
                 />
               ) : (
-                <>
-                  {/* Carousel rows per category (Google/B&N-like) */}
-                  <div className="space-y-10">
-                    {/* Featured/All row */}
-                    {books.length > 0 && (
-                      <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-lg font-semibold text-gray-900">Featured Picks</h3>
-                          <Link to="/books" className="text-sm text-emerald-600 hover:underline">See all</Link>
-                        </div>
-                        <div className="relative">
-                          <Swiper
-                            modules={[FreeMode, Navigation]}
-                            freeMode={true}
-                            navigation
-                            slidesPerView={'auto'}
-                            spaceBetween={16}
-                            className="py-2"
-                          >
-                            {books.slice(0, 20).map((book, i) => (
-                              <SwiperSlide key={book.id || `featured-${i}`} className="!w-auto">
-                                <div ref={i === 19 ? infiniteScrollRef : null} className="px-1">
-                                  <CompactBookCard book={book} onAddToCart={() => handleAddToCart(book)} />
-                                </div>
-                              </SwiperSlide>
-                            ))}
-                          </Swiper>
-                        </div>
-                      </div>
-                    )}
+                <div className="space-y-12">
+                  {/* Featured Carousel */}
+                  <LoopCarousel
+                    books={books.slice(0, 12)}
+                    title={t('home.featured_books')}
+                    subtitle={t('home.featured_books_description')}
+                    onAddToCart={handleAddToCart}
+                  />
 
-                    {/* Dynamic top categories */}
-                    {categoryBuckets.map(({ name, list }, idx) => (
-                      <div key={`${name}-${idx}`}>
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-lg font-semibold text-gray-900">{name}</h3>
-                          <Link to={`/books?category=${encodeURIComponent(name)}`} className="text-sm text-emerald-600 hover:underline">See all</Link>
-                        </div>
-                        <div className="relative">
-                          <Swiper
-                            modules={[FreeMode, Navigation]}
-                            freeMode={true}
-                            navigation
-                            slidesPerView={'auto'}
-                            spaceBetween={16}
-                            className="py-2"
-                          >
-                            {list.map((book, i) => (
-                              <SwiperSlide key={book.id || `${name}-${i}`} className="!w-auto">
-                                <div ref={i === list.length - 1 ? infiniteScrollRef : null} className="px-1">
-                                  <CompactBookCard book={book} onAddToCart={() => handleAddToCart(book)} />
-                                </div>
-                              </SwiperSlide>
-                            ))}
-                          </Swiper>
-                        </div>
-                      </div>
-                    ))}
+                  {/* Category Carousels */}
+                  {categoryBuckets.map(({ name, list }) => {
+                    const slug = name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                    const translatedName = t(`category.${slug}`) || name;
+                    const subtitle = t('home.discover_in_category', { category: translatedName }) || `Discover the best in ${translatedName}`;
+                    return (
+                      <LoopCarousel
+                        key={name}
+                        books={list}
+                        title={translatedName}
+                        subtitle={subtitle}
+                        onAddToCart={handleAddToCart}
+                        categorySlug={slug}
+                      />
+                    );
+                  })}
 
-                    {/* Loading and End States (kept below carousels) */}
-                    <div className="mt-6">
-                      {isFetchingNextPage && (
-                        <div className="space-y-4">
-                          <div className="text-center mb-6">
-                            <div className="inline-flex items-center gap-2 text-emerald-600">
-                              <div className="animate-spin rounded-full h-5 w-5 border-2 border-emerald-600 border-t-transparent"></div>
-                              <span className="font-medium">Loading more books...</span>
-                            </div>
-                          </div>
-                          <CardSkeleton count={4} viewMode={viewMode} />
-                        </div>
-                      )}
 
-                      {!isFetching && hasNextPage && (
-                        <div className="text-center">
-                          <button
-                            onClick={fetchNextPage}
-                            disabled={isFetchingNextPage}
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-xl"
-                          >
-                            {isFetchingNextPage ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                                <span>Loading...</span>
-                              </>
-                            ) : (
-                              <>
-                                <BookOpen className="w-4 h-4" />
-                                <span>Load More Books</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      )}
-
-                      {!isFetching && !hasNextPage && books.length > 0 && (
-                        <div className="text-center py-12">
-                          <div className="inline-flex flex-col items-center gap-4 p-8 bg-gray-50 rounded-2xl border border-gray-200">
-                            <Award className="w-12 h-12 text-emerald-600" />
-                            <div className="text-center">
-                              <h3 className="text-lg font-semibold text-gray-900 mb-2">You've seen it all!</h3>
-                              <p className="text-gray-600">You've reached the end of our collection.</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </>
+                </div>
               )}
             </section>
-
-            {/* Right sidebar removed to keep internal left filter + right rows */}
-          </div>
         </div>
 
-        {/* Compare Drawer */}
-        {showCompareDrawer && (
-          <CompareDrawer
-            selectedBooks={selectedBooks}
-            books={books}
-            onClose={() => setShowCompareDrawer(false)}
-            onClearSelection={clearSelection}
+        {/* Mobile Filter Sheet */}
+        {!isDesktop && (
+          <MobileFilterSheet
+            isOpen={showFilters}
+            onClose={() => setShowFilters(false)}
+            filters={{
+              category: selectedCategory,
+              search: searchQuery,
+              sortBy: sortBy,
+              priceRange: priceRange
+            }}
+            onFiltersChange={(newFilters) => {
+              handleCategoryChange(newFilters.category || '');
+              handleSearch(newFilters.search || '');
+              handleSortChange(newFilters.sortBy || 'popular');
+            }}
+            categories={CATEGORIES}
+            sortOptions={SORT_OPTIONS}
           />
         )}
       </main>

@@ -10,7 +10,11 @@ import { PaymentMethods, PaymentMethodDetails } from '../components/PaymentMetho
 import { PaymentProgress } from '../components/PaymentProgress';
 import { formatPrice } from '../utils/formatPrice';
 import { calculateCartTotal } from '../utils/calculateDiscount';
-import { CreditCard, MapPin, User, Mail, Phone } from 'lucide-react';
+import { CreditCard, MapPin, User, Mail, Phone, Lock } from 'lucide-react';
+import Button from '../components/ui/Button';
+import Typography from '../components/ui/Typography';
+import Card from '../components/ui/Card';
+import Input from '../components/ui/Input';
 
 const schema = yup.object({
   firstName: yup.string().required('First name is required'),
@@ -36,7 +40,6 @@ export function Checkout() {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -58,27 +61,27 @@ export function Checkout() {
   const shippingCost = cartTotal.subtotal >= 50 ? 0 : 9.99;
   const finalTotal = cartTotal.total + shippingCost;
 
-  const onSubmit = async (data) => {
+  const onSubmit = async () => {
     if (!selectedPaymentMethod) {
       alert('Please select a payment method');
       return;
     }
-    
+
     setIsProcessing(true);
     try {
       // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Clear cart after successful order
       clearCart();
-      
+
       // Redirect to success page
-      navigate('/order-success', { 
-        state: { 
+      navigate('/order-success', {
+        state: {
           orderNumber: `ORD-${Date.now()}`,
           total: finalTotal,
           paymentMethod: selectedPaymentMethod
-        } 
+        }
       });
     } catch (error) {
       console.error('Checkout error:', error);
@@ -94,186 +97,139 @@ export function Checkout() {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h2>
-          <p className="text-gray-600 mb-6">Add some books to your cart before checking out.</p>
-          <button
-            onClick={() => navigate('/books')}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-          >
+        <Card.Container className="text-center max-w-md mx-4">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+          </div>
+          <Typography.SectionTitle className="mb-2">Your cart is empty</Typography.SectionTitle>
+          <Typography.Body className="mb-6">
+            Add some books to your cart before checking out.
+          </Typography.Body>
+          <Button to="/books" variant="primary" size="lg">
             Continue Shopping
-          </button>
-        </div>
+          </Button>
+        </Card.Container>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-emerald-50/30 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Progress Indicator */}
         <PaymentProgress currentStep={2} className="mb-8" />
-        
+
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Checkout</h1>
-          <p className="text-gray-600">Complete your order with secure payment</p>
+          <Typography.PageTitle className="mb-2">Checkout</Typography.PageTitle>
+          <Typography.Body className="text-gray-600">
+            Complete your order with secure payment
+          </Typography.Body>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Checkout Form */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+          <Card.Container className="p-8">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
               {/* Contact Information */}
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                  <User className="w-5 h-5 mr-2" />
+                <Typography.SectionTitle className="mb-4 flex items-center">
+                  <User className="w-5 h-5 mr-2 text-emerald-600" />
                   Contact Information
-                </h2>
+                </Typography.SectionTitle>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      First Name
-                    </label>
-                    <input
-                      {...register('firstName')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    {errors.firstName && (
-                      <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Last Name
-                    </label>
-                    <input
-                      {...register('lastName')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    {errors.lastName && (
-                      <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
-                    )}
-                  </div>
+                  <Input.Field
+                    label="First Name"
+                    {...register('firstName')}
+                    error={errors.firstName?.message}
+                    required
+                  />
+                  <Input.Field
+                    label="Last Name"
+                    {...register('lastName')}
+                    error={errors.lastName?.message}
+                    required
+                  />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email
-                    </label>
-                    <input
-                      {...register('email')}
-                      type="email"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    {errors.email && (
-                      <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone
-                    </label>
-                    <input
-                      {...register('phone')}
-                      type="tel"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    {errors.phone && (
-                      <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
-                    )}
-                  </div>
+                  <Input.Field
+                    label="Email"
+                    type="email"
+                    {...register('email')}
+                    error={errors.email?.message}
+                    required
+                  />
+                  <Input.Field
+                    label="Phone"
+                    type="tel"
+                    {...register('phone')}
+                    error={errors.phone?.message}
+                    required
+                  />
                 </div>
               </div>
 
               {/* Shipping Address */}
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                  <MapPin className="w-5 h-5 mr-2" />
+                <Typography.SectionTitle className="mb-4 flex items-center">
+                  <MapPin className="w-5 h-5 mr-2 text-emerald-600" />
                   Shipping Address
-                </h2>
+                </Typography.SectionTitle>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Address
-                    </label>
-                    <input
-                      {...register('address')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    {errors.address && (
-                      <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>
-                    )}
-                  </div>
+                  <Input.Field
+                    label="Address"
+                    {...register('address')}
+                    error={errors.address?.message}
+                    required
+                  />
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        City
-                      </label>
-                      <input
-                        {...register('city')}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      />
-                      {errors.city && (
-                        <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        State
-                      </label>
-                      <input
-                        {...register('state')}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      />
-                      {errors.state && (
-                        <p className="mt-1 text-sm text-red-600">{errors.state.message}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        ZIP Code
-                      </label>
-                      <input
-                        {...register('zipCode')}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      />
-                      {errors.zipCode && (
-                        <p className="mt-1 text-sm text-red-600">{errors.zipCode.message}</p>
-                      )}
-                    </div>
+                    <Input.Field
+                      label="City"
+                      {...register('city')}
+                      error={errors.city?.message}
+                      required
+                    />
+                    <Input.Field
+                      label="State"
+                      {...register('state')}
+                      error={errors.state?.message}
+                      required
+                    />
+                    <Input.Field
+                      label="ZIP Code"
+                      {...register('zipCode')}
+                      error={errors.zipCode?.message}
+                      required
+                    />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Country
-                    </label>
-                    <select
-                      {...register('country')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="United States">United States</option>
-                      <option value="Canada">Canada</option>
-                      <option value="United Kingdom">United Kingdom</option>
-                    </select>
-                    {errors.country && (
-                      <p className="mt-1 text-sm text-red-600">{errors.country.message}</p>
-                    )}
-                  </div>
+                  <Input.Select
+                    label="Country"
+                    {...register('country')}
+                    error={errors.country?.message}
+                    options={[
+                      { value: 'United States', label: 'United States' },
+                      { value: 'Canada', label: 'Canada' },
+                      { value: 'United Kingdom', label: 'United Kingdom' }
+                    ]}
+                    required
+                  />
                 </div>
               </div>
 
               {/* Payment Method */}
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                  <CreditCard className="w-5 h-5 mr-2" />
+                <Typography.SectionTitle className="mb-4 flex items-center">
+                  <CreditCard className="w-5 h-5 mr-2 text-emerald-600" />
                   Payment Method
-                </h2>
-                
+                </Typography.SectionTitle>
+
                 <PaymentMethods
                   selectedMethod={selectedPaymentMethod}
                   onMethodChange={handlePaymentMethodChange}
                   className="mb-6"
                 />
-                
+
                 {selectedPaymentMethod && (
                   <PaymentMethodDetails
                     method={selectedPaymentMethod}
@@ -283,84 +239,80 @@ export function Checkout() {
               </div>
 
               {/* Place Order Button */}
-              <button
+              <Button
                 type="submit"
                 disabled={isProcessing}
-                className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-green-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                variant="primary"
+                size="xl"
+                className="w-full"
+                loading={isProcessing}
+                icon={<Lock className="w-5 h-5" />}
               >
-                {isProcessing ? (
-                  <>
-                    <LoadingSpinner size="sm" text="" />
-                    <span className="ml-3">Processing Payment...</span>
-                  </>
-                ) : (
-                  <>
-                    <FontAwesomeIcon icon={faLock} className="w-5 h-5 mr-3" />
-                    Place Order - {formatPrice(finalTotal)}
-                  </>
-                )}
-              </button>
+                {isProcessing ? 'Processing Payment...' : `Place Order - ${formatPrice(finalTotal)}`}
+              </Button>
             </form>
-          </div>
+          </Card.Container>
 
           {/* Order Summary */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 h-fit border border-gray-100">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Order Summary</h2>
-            
-            {/* Order Items */}
-            <div className="space-y-4 mb-6">
-              {items.map((item) => (
-                <div key={item.id} className="flex items-center space-x-4">
-                  <img
-                    src={item.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA2MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0zMCA0MEwyMCA1MEg0MEwzMCA0MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPHRleHQgeD0iMzAiIHk9IjYwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkI3MjgwIiBmb250LWZhbWlseT0ic3lzdGVtLXVpIiBmb250LXNpemU9IjEwIj5Cb29rPC90ZXh0Pgo8L3N2Zz4K'}
-                    alt={item.title}
-                    className="w-12 h-16 object-cover rounded"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-medium text-gray-900 truncate">
-                      {item.title}
-                    </h3>
-                    <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
-                  </div>
-                  <div className="text-sm font-medium text-gray-900">
-                    {formatPrice((item.discountPrice || item.price) * item.quantity)}
-                  </div>
-                </div>
-              ))}
-            </div>
+          <Card.Summary>
+            <Card.Header title="Order Summary" />
 
-            {/* Order Totals */}
-            <div className="space-y-2 border-t border-gray-200 pt-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="text-gray-900">{formatPrice(cartTotal.subtotal)}</span>
+            <Card.Content>
+              {/* Order Items */}
+              <div className="space-y-4 mb-6">
+                {items.map((item) => (
+                  <div key={item.id} className="flex items-center space-x-4">
+                    <img
+                      src={item.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA2MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0zMCA0MEwyMCA1MEg0MEwzMCA0MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPHRleHQgeD0iMzAiIHk9IjYwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkI3MjgwIiBmb250LWZhbWlseT0ic3lzdGVtLXVpIiBmb250LXNpemU9IjEwIj5Cb29rPC90ZXh0Pgo8L3N2Zz4K'}
+                      alt={item.title}
+                      className="w-12 h-16 object-cover rounded"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <Typography.Body className="font-medium text-gray-900 truncate">
+                        {item.title}
+                      </Typography.Body>
+                      <Typography.Small>Qty: {item.quantity}</Typography.Small>
+                    </div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {formatPrice((item.discountPrice || item.price) * item.quantity)}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Shipping</span>
-                <span className="text-gray-900">
-                  {shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}
-                </span>
-              </div>
-              {cartTotal.savings > 0 && (
-                <div className="flex justify-between text-sm text-green-600">
-                  <span>Discount</span>
-                  <span>-{formatPrice(cartTotal.savings)}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-2">
-                <span>Total</span>
-                <span>{formatPrice(finalTotal)}</span>
-              </div>
-            </div>
 
-            {/* Security Info */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center text-sm text-gray-600">
-                <span className="mr-2">🔒</span>
-                <span>Your payment information is secure and encrypted</span>
+              {/* Order Totals */}
+              <div className="space-y-2 border-t border-gray-200 pt-4">
+                <div className="flex justify-between text-sm">
+                  <Typography.Body className="text-gray-600">Subtotal</Typography.Body>
+                  <Typography.Body className="font-medium">{formatPrice(cartTotal.subtotal)}</Typography.Body>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <Typography.Body className="text-gray-600">Shipping</Typography.Body>
+                  <Typography.Body className="font-medium">
+                    {shippingCost === 0 ? <Typography.Accent>Free</Typography.Accent> : formatPrice(shippingCost)}
+                  </Typography.Body>
+                </div>
+                {cartTotal.savings > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <Typography.Body>Discount</Typography.Body>
+                    <Typography.Body className="font-medium">-{formatPrice(cartTotal.savings)}</Typography.Body>
+                  </div>
+                )}
+                <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-2">
+                  <Typography.Body>Total</Typography.Body>
+                  <Typography.Body>{formatPrice(finalTotal)}</Typography.Body>
+                </div>
               </div>
-            </div>
-          </div>
+
+              {/* Security Info */}
+              <Card.Footer>
+                <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                  <Lock className="w-4 h-4" />
+                  <Typography.Muted>Your payment information is secure and encrypted</Typography.Muted>
+                </div>
+              </Card.Footer>
+            </Card.Content>
+          </Card.Summary>
         </div>
       </div>
     </div>

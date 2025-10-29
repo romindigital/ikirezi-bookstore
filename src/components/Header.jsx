@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useTranslation } from '../hooks/useTranslation';
 import { EnhancedSearchBar } from './EnhancedSearchBar';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
@@ -33,6 +34,7 @@ export function Header() {
 
   const { user, logout } = useAuth();
   const { itemCount } = useCart();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const megaMenuRef = useRef(null);
@@ -160,9 +162,8 @@ export function Header() {
         <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={closeAllMenus} />
       )}
 
-      <header className={`bg-white sticky top-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'shadow-lg border-b border-gray-200' : 'shadow-sm'
-      }`}>
+      <header className={`bg-white sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'shadow-lg border-b border-gray-200' : 'shadow-sm'
+        }`}>
         {/* Top Info Bar - Simplified */}
         <div className="bg-amber-500/80 border-b border-gray-200 hidden lg:block">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -179,7 +180,7 @@ export function Header() {
 
               {/* Simple Welcome Message */}
               <div className="text-gray-900">
-                Free shipping on orders over $50
+                {t('home.free_shipping_description')}
               </div>
             </div>
           </div>
@@ -189,8 +190,8 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="flex items-center space-x-3 z-50"
               onClick={closeAllMenus}
             >
@@ -204,15 +205,14 @@ export function Header() {
             <nav className="hidden lg:flex items-center space-x-1 flex-1 justify-center">
               <Link
                 to="/"
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 relative group ${
-                  isActive('/')
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 relative group ${isActive('/')
                     ? 'text-emerald-600 bg-emerald-50'
                     : 'text-gray-700 hover:text-emerald-600 hover:bg-emerald-50'
-                }`}
+                  }`}
               >
                 <span className="flex items-center">
                   <Home className="w-4 h-4 mr-2" />
-                  Home
+                  {t('nav.home')}
                 </span>
                 {isActive('/') && (
                   <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-emerald-600 rounded-full"></div>
@@ -221,46 +221,45 @@ export function Header() {
 
               <Link
                 to="/books"
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 relative group ${
-                  isActive('/books')
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 relative group ${isActive('/books')
                     ? 'text-emerald-600 bg-emerald-50'
                     : 'text-gray-700 hover:text-emerald-600 hover:bg-emerald-50'
-                }`}
+                  }`}
               >
                 <span className="flex items-center">
                   <BookOpen className="w-4 h-4 mr-2" />
-                  All Books
+                  {t('nav.books')}
                 </span>
                 {isActive('/books') && (
                   <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-emerald-600 rounded-full"></div>
                 )}
               </Link>
-              
+
               {/* Categories with Mega Menu */}
               <div className="relative" ref={megaMenuRef}>
-                <button
-                  onMouseEnter={() => setIsMegaMenuOpen(true)}
-                  onClick={() => setIsMegaMenuOpen(!isMegaMenuOpen)}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 flex items-center relative group ${
-                    isMegaMenuOpen || isActive('/categories')
-                      ? 'text-emerald-600 bg-emerald-50'
-                      : 'text-gray-700 hover:text-emerald-600 hover:bg-emerald-50'
-                  }`}
-                >
-                  <Grid3X3 className="w-4 h-4 mr-2" />
-                  Categories
-                  <ChevronDown className={`w-4 h-4 ml-1 transition-transform duration-200 ${
-                    isMegaMenuOpen ? 'rotate-180' : ''
-                  }`} />
-                  {(isMegaMenuOpen || isActive('/categories')) && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-emerald-600 rounded-full"></div>
-                  )}
-                </button>
+                <Link to={`/categories`}>
+                  <button
+                    onMouseEnter={() => setIsMegaMenuOpen(true)}
+                    onClick={() => setIsMegaMenuOpen(!isMegaMenuOpen)}
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 flex items-center relative group ${isMegaMenuOpen || isActive('/categories')
+                        ? 'text-emerald-600 bg-emerald-50'
+                        : 'text-gray-700 hover:text-emerald-600 hover:bg-emerald-50'
+                      }`}
+                  >
+                    <Grid3X3 className="w-4 h-4 mr-2" />
+                    {t('nav.categories')}
+                    <ChevronDown className={`w-4 h-4 ml-1 transition-transform duration-200 ${isMegaMenuOpen ? 'rotate-180' : ''
+                      }`} />
+                    {(isMegaMenuOpen || isActive('/categories')) && (
+                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-emerald-600 rounded-full"></div>
+                    )}
+                  </button>
+                </Link>
 
                 {/* Enhanced Mega Menu - Professional Bookstore Style */}
                 {isMegaMenuOpen && (
                   <div
-                    className="absolute left-0 top-full w-screen max-w-7xl bg-white shadow-2xl border border-gray-200 z-50 mt-2"
+                    className="rounded-lg absolute left-[200px] transform -translate-x-1/2 top-full w-screen max-w-7xl bg-white shadow-2xl border border-gray-200 z-50 mt-2 transition duration-200"
                     onMouseLeave={() => setIsMegaMenuOpen(false)}
                   >
                     <div className="p-8">
@@ -268,7 +267,7 @@ export function Header() {
                       <div className="mb-8">
                         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
                           <Award className="w-5 h-5 mr-2 text-amber-500" />
-                          Featured This Week
+                          {t('nav.featured')}
                         </h3>
                         <div className="grid grid-cols-3 gap-6">
                           {featuredBooks.map((book) => (
@@ -332,9 +331,8 @@ export function Header() {
                               className="flex items-center px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-700 transition-all duration-200 font-medium group"
                               onClick={closeAllMenus}
                             >
-                              <link.icon className={`w-4 h-4 mr-2 ${
-                                link.name.includes('Bestsellers') || link.name.includes('Award') ? 'text-amber-500' : 'text-emerald-600'
-                              }`} />
+                              <link.icon className={`w-4 h-4 mr-2 ${link.name.includes('Bestsellers') || link.name.includes('Award') ? 'text-amber-500' : 'text-emerald-600'
+                                }`} />
                               {link.name}
                             </Link>
                           ))}
@@ -357,20 +355,20 @@ export function Header() {
               <div className="hidden md:block">
                 <LanguageSwitcher />
               </div>
-              
+
               {/* Search Icon for Mobile */}
-              <button 
+              <button
                 className="lg:hidden p-2 text-gray-700 hover:text-emerald-600 transition-colors duration-200 rounded-md hover:bg-gray-50"
                 onClick={() => setIsSearchExpanded(!isSearchExpanded)}
               >
                 <Search className="w-5 h-5" />
               </button>
-              
+
               {/* Cart */}
               <Link
                 to="/cart"
                 className="relative p-2 text-gray-700 hover:text-emerald-600 transition-colors duration-200 rounded-md hover:bg-gray-50"
-                aria-label={`Cart with ${itemCount} items`}
+                aria-label={t('nav.cart', { count: itemCount })}
                 onClick={closeAllMenus}
               >
                 <ShoppingCart className="w-5 h-5" />
@@ -402,32 +400,32 @@ export function Header() {
                           <p className="text-sm font-medium text-gray-900">{user.name}</p>
                           <p className="text-xs text-gray-500">{user.email}</p>
                         </div>
-                        
+
                         <Link
                           to="/profile"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-emerald-600 transition-colors duration-150"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           <Settings className="w-4 h-4 mr-3" />
-                          My Profile
+                          {t('nav.profile')}
                         </Link>
-                        
+
                         <Link
                           to="/orders"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-emerald-600 transition-colors duration-150"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           <ShoppingCart className="w-4 h-4 mr-3" />
-                          My Orders
+                          {t('nav.orders')}
                         </Link>
-                        
+
                         <Link
                           to="/wishlist"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-emerald-600 transition-colors duration-150"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           <Heart className="w-4 h-4 mr-3" />
-                          My Wishlist
+                          {t('nav.wishlist')}
                         </Link>
 
                         {user.role === 'admin' && (
@@ -440,13 +438,13 @@ export function Header() {
                             Admin Dashboard
                           </Link>
                         )}
-                        
+
                         <button
                           onClick={handleLogout}
                           className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors duration-150 border-t border-gray-100 mt-2"
                         >
                           <LogOut className="w-4 h-4 mr-3" />
-                          Sign Out
+                          {t('nav.logout')}
                         </button>
                       </>
                     ) : (
@@ -457,7 +455,7 @@ export function Header() {
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           <User className="w-4 h-4 mr-3" />
-                          Sign In
+                          {t('nav.login')}
                         </Link>
                         <Link
                           to="/register"
@@ -465,7 +463,7 @@ export function Header() {
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           <Settings className="w-4 h-4 mr-3" />
-                          Create Account
+                          {t('nav.signup')}
                         </Link>
                       </>
                     )}
@@ -493,15 +491,15 @@ export function Header() {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div 
+          <div
             ref={mobileMenuRef}
             className="lg:hidden fixed top-0 left-0 w-80 h-full bg-white shadow-xl z-50 transform transition-transform duration-300"
           >
             <div className="p-6 h-full overflow-y-auto">
               {/* Mobile Menu Header */}
               <div className="flex items-center justify-between mb-8">
-                <Link 
-                  to="/" 
+                <Link
+                  to="/"
                   className="flex items-center space-x-3"
                   onClick={closeAllMenus}
                 >
@@ -534,7 +532,7 @@ export function Header() {
 
                 {/* Mobile Categories Accordion */}
                 <div className="border-t border-gray-200 pt-4">
-                  <div className="px-4 py-3 font-medium text-gray-900">Categories</div>
+                  <div className="px-4 py-3 font-medium text-gray-900">{t('nav.categories')}</div>
                   <div className="grid grid-cols-2 gap-2 mt-2">
                     {Object.values(megaMenuCategories).flatMap(cat =>
                       cat.subcategories.slice(0, 4).map(sub => (

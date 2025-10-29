@@ -24,6 +24,7 @@ import { trackBookView } from '../services/personalizationService';
 import { Tooltip } from './Tooltip';
 import { QuickPreviewModal } from './QuickPreviewModal';
 import { LazyImage } from './LazyImage';
+import { useTranslation } from '../hooks/useTranslation';
 
 export function BookCard({ 
   book, 
@@ -31,13 +32,16 @@ export function BookCard({
   showWishlist = true, 
   viewMode = 'grid',
   isSelected = false,
-  onSelection = null
+  onSelection = null,
+  className = ''
 }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const { addToCart, isInCart, getItemQuantity } = useCart();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleAddToCart = async () => {
     if (isAddingToCart) return;
@@ -107,149 +111,182 @@ export function BookCard({
   const isInCartItem = isInCart(book.id);
   const cartQuantity = getItemQuantity(book.id);
 
-  // Render different layouts based on view mode
+  // Premium badge configurations
+  const getPremiumBadge = () => {
+    if (book.isBestseller) {
+      return {
+        label: 'Bestseller',
+        icon: faBolt,
+        color: 'from-purple-600 to-purple-700',
+        textColor: 'text-white'
+      };
+    }
+    if (book.isNew) {
+      return {
+        label: 'New Release',
+        icon: faLanguage,
+        color: 'from-blue-600 to-cyan-600',
+        textColor: 'text-white'
+      };
+    }
+    if (book.isTrending) {
+      return {
+        label: 'Trending',
+        icon: faBolt,
+        color: 'from-orange-500 to-red-500',
+        textColor: 'text-white'
+      };
+    }
+    if (book.award) {
+      return {
+        label: book.award,
+        icon: faBook,
+        color: 'from-amber-500 to-yellow-500',
+        textColor: 'text-white'
+      };
+    }
+    return null;
+  };
+
+  const premiumBadge = getPremiumBadge();
+
   if (viewMode === 'list') {
     return (
       <>
-        <article className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 flex">
-          {/* Book Image */}
-          <div className="relative w-32 h-48 flex-shrink-0">
-            <div 
-              className="cursor-pointer"
-              onClick={handleAddToCartAndNavigate}
-              aria-label={`Add ${book.title} by ${book.author} to cart`}
-            >
-              <LazyImage
-                src={book.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCIgdmlld0JveD0iMCAwIDMwMCA0MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iNDAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xNTAgMTUwTDEyMCAxODBIMTgwTDE1MCAxNTBaIiBmaWxsPSIjOUNBM0FGIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMjAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkI3MjgwIiBmb250LWZhbWlseT0ic3lzdGVtLXVpIiBmb250LXNpemU9IjE0Ij5Cb29rIENvdmVyPC90ZXh0Pgo8L3N2Zz4K'}
-                alt={`Book cover for ${book.title} by ${book.author}`}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                width="300"
-                height="400"
-              />
-            </div>
-            
-            {/* Discount Badge */}
-            {discount.hasDiscount && (
-              <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-bold">
-                -{discount.discountPercent}%
-              </div>
-            )}
-
-            {/* Wishlist Button */}
-            {showWishlist && (
-              <button
-                onClick={handleWishlistToggle}
-                className={`absolute top-2 right-2 p-2 rounded-full transition-all duration-300 ${
-                  isWishlisted 
-                    ? 'bg-red-500 text-white' 
-                    : 'bg-white/90 text-gray-600 hover:bg-red-500 hover:text-white'
-                }`}
+        <article className={`bg-white rounded-2xl transition-all duration-500 group border border-gray-100/80 backdrop-blur-sm ${className}`}>
+          <div className="flex items-start gap-6 p-6">
+            {/* Book Image */}
+            <div className="relative flex-shrink-0">
+              <Link 
+                to={`/book/${book.id}`}
+                className="block relative overflow-hidden rounded-xl group/image"
               >
-                <FontAwesomeIcon icon={faHeart} className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          {/* Book Details */}
-          <div className="flex-1 p-4">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex-1">
-                <div 
-                  className="cursor-pointer hover:text-blue-600 transition-colors"
-                  onClick={handleAddToCartAndNavigate}
-                >
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
-                    {book.title}
-                  </h3>
-                </div>
-                <p className="text-gray-600 mb-1 text-sm">by {book.author}</p>
-                <p className="text-xs text-gray-500 mb-3 line-clamp-2">{book.description}</p>
-              </div>
-              
-              {/* Selection Button for Compare Mode */}
-              {onSelection && (
-                <button
-                  onClick={onSelection}
-                  className={`ml-4 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                    isSelected
-                      ? 'bg-blue-600 border-blue-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-400 hover:border-blue-500'
+                <div className={`w-28 h-36 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl transition-all duration-500 ${imageLoaded ? 'opacity-0' : 'opacity-100'}`} />
+                <img
+                  src={book.image}
+                  alt={book.title}
+                  onLoad={() => setImageLoaded(true)}
+                  className={`w-28 h-36 object-cover rounded-xl transition-all duration-500 group-hover/image:scale-105 ${
+                    imageLoaded ? 'opacity-100' : 'opacity-0'
                   }`}
-                >
-                  {isSelected ? (
-                    <FontAwesomeIcon icon={faCheck} className="w-4 h-4" />
-                  ) : (
-                    <FontAwesomeIcon icon={faTimes} className="w-4 h-4" />
-                  )}
-                </button>
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/10 transition-all duration-300 rounded-xl" />
+              </Link>
+
+              {/* Premium Badge */}
+              {premiumBadge && (
+                <div className={`absolute -top-2 -left-2 bg-gradient-to-r ${premiumBadge.color} ${premiumBadge.textColor} px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5`}>
+                  <FontAwesomeIcon icon={premiumBadge.icon} className="w-3 h-3" />
+                  {premiumBadge.label}
+                </div>
               )}
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <RatingStars rating={book.rating || 0} size="sm" />
-                <span className="text-xs text-gray-500">({book.reviewCount || 0})</span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <div className="text-right">
-                  {discount.hasDiscount ? (
-                    <div className="flex items-center space-x-1">
-                      <span className="text-xl font-bold text-gray-900">
-                        {formatPrice(discount.finalPrice)}
-                      </span>
-                      <span className="text-sm text-gray-500 line-through">
-                        {formatPrice(book.price)}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-xl font-bold text-gray-900">
-                      {formatPrice(book.price)}
-                    </span>
-                  )}
+            {/* Book Details */}
+            <div className="flex-1 min-w-0 space-y-3">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <Link to={`/book/${book.id}`}>
+                    <h3 className="text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors line-clamp-2 leading-tight mb-2">
+                      {book.title}
+                    </h3>
+                  </Link>
+                  <p className="text-gray-600 text-sm font-medium">by {book.author}</p>
+                  <p className="text-gray-500 text-sm mt-2 line-clamp-2 leading-relaxed">
+                    {book.description}
+                  </p>
                 </div>
-                
-                {showAddToCart && (
+
+                {/* Selection Button */}
+                {onSelection && (
                   <button
-                    onClick={handleAddToCart}
-                    disabled={isAddingToCart || book.stock === 0}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-1 text-sm ${
-                      isInCartItem
-                        ? 'bg-green-100 text-green-800 border border-green-300'
-                        : book.stock === 0
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    onClick={onSelection}
+                    className={`flex-shrink-0 w-10 h-10 rounded-xl border-2 flex items-center justify-center transition-all duration-300 ${
+                      isSelected
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg'
+                        : 'bg-white border-gray-300 text-gray-400 hover:border-blue-400 hover:scale-110'
                     }`}
                   >
-                    {isAddingToCart ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        <span>Adding...</span>
-                      </>
-                    ) : isInCartItem ? (
-                      <>
-                        <FontAwesomeIcon icon={faShoppingCart} className="w-4 h-4" />
-                        <span>In Cart ({cartQuantity})</span>
-                      </>
-                    ) : book.stock === 0 ? (
-                      <>
-                        <FontAwesomeIcon icon={faShoppingCart} className="w-4 h-4" />
-                        <span>Out of Stock</span>
-                      </>
+                    {isSelected ? (
+                      <FontAwesomeIcon icon={faCheck} className="w-5 h-5" />
                     ) : (
-                      <>
-                        <FontAwesomeIcon icon={faShoppingCart} className="w-4 h-4" />
-                        <span>Add to Cart</span>
-                      </>
+                      <FontAwesomeIcon icon={faTimes} className="w-5 h-5" />
                     )}
                   </button>
                 )}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <RatingStars rating={book.rating || 0} size="md" />
+                  <span className="text-sm text-gray-500">({book.reviewCount || 0})</span>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  {/* Price */}
+                  <div className="text-right">
+                    {discount.hasDiscount ? (
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl font-bold text-gray-900">
+                          {formatPrice(discount.finalPrice)}
+                        </span>
+                        <span className="text-lg text-gray-500 line-through">
+                          {formatPrice(book.price)}
+                        </span>
+                        <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                          -{discount.discountPercent}%
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-2xl font-bold text-gray-900">
+                        {formatPrice(book.price)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Add to Cart */}
+                  {showAddToCart && (
+                    <button
+                      onClick={handleAddToCart}
+                      disabled={isAddingToCart || book.stock === 0}
+                      className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 ${
+                        isInCartItem
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : book.stock === 0
+                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 hover:shadow-xl'
+                      }`}
+                    >
+                      {isAddingToCart ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                          <span>{t('common.loading')}</span>
+                        </>
+                      ) : isInCartItem ? (
+                        <>
+                          <FontAwesomeIcon icon={faShoppingCart} className="w-5 h-5" />
+                          <span>{t('book.in_cart')} ({cartQuantity})</span>
+                        </>
+                      ) : book.stock === 0 ? (
+                        <>
+                          <FontAwesomeIcon icon={faCalendar} className="w-5 h-5" />
+                          <span>{t('book.out_of_stock')}</span>
+                        </>
+                      ) : (
+                        <>
+                          <FontAwesomeIcon icon={faShoppingCart} className="w-5 h-5" />
+                          <span>{t('book.add_to_cart')}</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </article>
 
-        <BookPreviewModal
+        <QuickPreviewModal
           isOpen={showPreview}
           onClose={() => setShowPreview(false)}
           book={book}
@@ -261,202 +298,152 @@ export function BookCard({
   if (viewMode === 'compact') {
     return (
       <>
-        <article className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 group hover:-translate-y-1">
+        <article className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 group border border-gray-100">
           <div className="relative">
-            <div 
-              className="cursor-pointer"
-              onClick={handleAddToCartAndNavigate}
-              aria-label={`Add ${book.title} by ${book.author} to cart`}
+            <Link 
+              to={`/book/${book.id}`}
+              className="block relative overflow-hidden rounded-t-xl"
             >
-              <LazyImage
-                src={book.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCIgdmlld0JveD0iMCAwIDMwMCA0MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iNDAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xNTAgMTUwTDEyMCAxODBIMTgwTDE1MCAxNTBaIiBmaWxsPSIjOUNBM0FGIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMjAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNkI3MjgwIiBmb250LWZhbWlseT0ic3lzdGVtLXVpIiBmb250LXNpemU9IjE0Ij5Cb29rIENvdmVyPC90ZXh0Pgo8L3N2Zz4K'}
-                alt={`Book cover for ${book.title} by ${book.author}`}
-                className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
-                width="300"
-                height="400"
+              <img
+                src={book.image}
+                alt={book.title}
+                className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
               />
-            </div>
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300" />
+            </Link>
             
             {discount.hasDiscount && (
-              <div className="absolute top-1 left-1 bg-red-500 text-white px-1 py-0.5 rounded text-xs font-bold">
+              <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-bold shadow-lg">
                 -{discount.discountPercent}%
               </div>
             )}
           </div>
 
-          <div className="p-2">
-            <h3 className="font-semibold text-gray-900 text-xs mb-1 line-clamp-2 leading-tight">
+          <div className="p-3 space-y-2">
+            <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 leading-tight">
               {book.title}
             </h3>
-            <p className="text-gray-600 text-xs mb-1 line-clamp-1">by {book.author}</p>
+            <p className="text-gray-600 text-xs line-clamp-1">by {book.author}</p>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-gray-900">
+              <span className="text-base font-bold text-gray-900">
                 {discount.hasDiscount ? formatPrice(discount.finalPrice) : formatPrice(book.price)}
               </span>
               <RatingStars rating={book.rating || 0} size="xs" />
             </div>
           </div>
         </article>
-
-        <BookPreviewModal
-          isOpen={showPreview}
-          onClose={() => setShowPreview(false)}
-          book={book}
-        />
       </>
     );
   }
 
-  // Enhanced grid view with better visual design
+  // Premium Grid View
   return (
     <>
-      <article className="book-card bg-white rounded-xl shadow-md hover:shadow-xl h-full flex flex-col transition-all duration-300 hover:-translate-y-2 group">
-        {/* Enhanced Book Image with Visual Indicators */}
-        <div className="relative overflow-hidden rounded-t-xl flex-shrink-0">
-          <div 
-            className="cursor-pointer"
-            onClick={handleAddToCartAndNavigate}
-            aria-label={`Add ${book.title} by ${book.author} to cart`}
+      <article className={`bg-white rounded-2xl shadow-lg hover:shadow-2xl h-full flex flex-col transition-all duration-500 group border border-gray-100/80 backdrop-blur-sm overflow-hidden ${className}`}>
+        {/* Book Image Container */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+          <Link 
+            to={`/book/${book.id}`}
+            className="block relative aspect-[3/4] overflow-hidden"
           >
-            <LazyImage
-              src={book.image || '/api/placeholder/300/400'}
-              alt={`Book cover for ${book.title} by ${book.author}`}
-              className="w-full h-48 sm:h-52 lg:h-56 object-cover group-hover:scale-105 transition-transform duration-300"
-              width="300"
-              height="400"
+            {/* Loading Skeleton */}
+            <div className={`absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 transition-opacity duration-500 ${
+              imageLoaded ? 'opacity-0' : 'opacity-100'
+            }`} />
+            
+            {/* Book Image */}
+            <img
+              src={book.image}
+              alt={book.title}
+              onLoad={() => setImageLoaded(true)}
+              className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${
+                imageLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
             />
-          </div>
-          
-          {/* Enhanced Visual Indicators */}
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
-            {/* Trending Badge */}
-            {book.isTrending && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-500 text-white text-xs font-bold rounded-full shadow-lg">
-                <FontAwesomeIcon icon={faBolt} className="w-3 h-3" />
-                Trending
-              </span>
-            )}
             
-            {/* New Badge */}
-            {book.isNew && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-500 text-white text-xs font-bold rounded-full shadow-lg">
-                <FontAwesomeIcon icon={faBook} className="w-3 h-3" />
-                New
-              </span>
-            )}
-            
-            {/* Sale Badge */}
-            {discount.hasDiscount && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg">
-                <FontAwesomeIcon icon={faTag} className="w-3 h-3" />
-                -{discount.discountPercent}%
-              </span>
-            )}
-          </div>
-          
+            {/* Overlay Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-all duration-500" />
+          </Link>
+
+          {/* Premium Badge */}
+          {premiumBadge && (
+            <div className={`absolute top-4 left-4 bg-gradient-to-r ${premiumBadge.color} ${premiumBadge.textColor} px-3 py-2 rounded-xl text-xs font-bold shadow-2xl flex items-center gap-2 z-10`}>
+              <FontAwesomeIcon icon={premiumBadge.icon} className="w-3.5 h-3.5" />
+              {premiumBadge.label}
+            </div>
+          )}
+
           {/* Discount Badge */}
           {discount.hasDiscount && (
-            <div 
-              className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-bold"
-              aria-label={`${discount.discountPercent}% discount`}
-            >
+            <div className="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-pink-600 text-white px-3 py-2 rounded-xl text-sm font-bold shadow-2xl z-10">
               -{discount.discountPercent}%
             </div>
           )}
+
+          {/* Action Buttons Overlay */}
+          <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-500 bg-black/40">
+            <button
+              onClick={() => setShowPreview(true)}
+              className="bg-white text-gray-900 px-4 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-300 hover:scale-105 shadow-2xl flex items-center gap-2"
+            >
+              <FontAwesomeIcon icon={faEye} className="w-4 h-4" />
+              {t('preview')}
+            </button>
+            <Link
+              to={`/book/${book.id}`}
+              className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:scale-105 shadow-2xl flex items-center gap-2"
+            >
+              <FontAwesomeIcon icon={faBookOpen} className="w-4 h-4" />
+              {t('details')}
+            </Link>
+          </div>
 
           {/* Wishlist Button */}
           {showWishlist && (
             <button
               onClick={handleWishlistToggle}
-              className={`absolute top-2 right-2 p-2 rounded-full transition-all duration-300 focus:ring-2 focus:ring-red-300 focus:outline-none ${
-                isWishlisted 
-                  ? 'bg-red-500 text-white' 
-                  : 'bg-white/90 text-gray-600 hover:bg-red-500 hover:text-white'
-              }`}
-              aria-label={isWishlisted ? `Remove ${book.title} from wishlist` : `Add ${book.title} to wishlist`}
-            >
-              <FontAwesomeIcon icon={faHeart} className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} aria-hidden="true" />
-            </button>
-          )}
-
-          {/* Selection Button for Compare Mode */}
-          {onSelection && (
-            <button
-              onClick={onSelection}
-              className={`absolute top-2 left-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                isSelected
-                  ? 'bg-blue-600 border-blue-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-400 hover:border-blue-500'
+              className={`absolute top-4 right-4 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 z-20 ${
+                isWishlisted
+                  ? 'bg-red-500 text-white shadow-2xl scale-110'
+                  : 'bg-white/90 text-gray-600 hover:bg-red-500 hover:text-white hover:scale-110 hover:shadow-2xl'
               }`}
             >
-              {isSelected ? (
-                <FontAwesomeIcon icon={faCheck} className="w-3 h-3" />
-              ) : (
-                <FontAwesomeIcon icon={faTimes} className="w-3 h-3" />
-              )}
+              <FontAwesomeIcon icon={faHeart} className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
             </button>
           )}
-
-          {/* Quick View Buttons */}
-          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-2">
-            <button
-              onClick={() => setShowPreview(true)}
-              className="bg-white text-gray-900 px-3 py-2 rounded-lg flex items-center space-x-1 hover:bg-gray-100 transition-colors focus:ring-2 focus:ring-white focus:outline-none text-sm font-medium"
-              aria-label={`Quick preview of ${book.title}`}
-            >
-              <FontAwesomeIcon icon={faEye} className="w-4 h-4" aria-hidden="true" />
-              <span>Preview</span>
-            </button>
-            <Link
-              to={`/book/${book.id}`}
-              className="bg-blue-600 text-white px-3 py-2 rounded-lg flex items-center space-x-1 hover:bg-blue-700 transition-colors focus:ring-2 focus:ring-blue-300 focus:outline-none text-sm font-medium"
-              aria-label={`View details for ${book.title}`}
-              onClick={handleBookView}
-            >
-              <FontAwesomeIcon icon={faBookOpen} className="w-4 h-4" aria-hidden="true" />
-              <span>Details</span>
-            </Link>
-          </div>
         </div>
 
         {/* Book Details */}
-        <div className="p-4 flex flex-col flex-grow">
-          {/* Title */}
-          <div 
-            className="cursor-pointer hover:text-blue-600 transition-colors flex-grow"
-            onClick={handleAddToCartAndNavigate}
-          >
-            <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2 leading-tight min-h-[2.5rem]">
-              {book.title}
-            </h3>
+        <div className="p-6 flex flex-col flex-grow space-y-4">
+          {/* Title and Author */}
+          <div className="space-y-2">
+            <Link to={`/book/${book.id}`}>
+              <h3 className="font-bold text-gray-900 text-lg leading-tight line-clamp-2 hover:text-blue-600 transition-colors">
+                {book.title}
+              </h3>
+            </Link>
+            <p className="text-gray-600 text-sm font-medium">by {book.author}</p>
           </div>
 
-          {/* Author */}
-          <p className="text-gray-600 text-xs mb-2 line-clamp-1">
-            by {book.author}
-          </p>
-
           {/* Rating */}
-          <div className="flex items-center space-x-2 mb-3">
+          <div className="flex items-center gap-2">
             <RatingStars rating={book.rating || 0} size="sm" />
-            <span className="text-xs text-gray-500" aria-label={`${book.reviewCount || 0} reviews`}>
-              ({book.reviewCount || 0})
-            </span>
+            <span className="text-sm text-gray-500">({book.reviewCount || 0})</span>
           </div>
 
           {/* Price */}
-          <div className="flex items-center space-x-2 mb-3">
+          <div className="flex items-center gap-3">
             {discount.hasDiscount ? (
-              <div className="flex items-center space-x-2">
-                <span className="text-lg font-bold text-gray-900" aria-label={`Sale price ${formatPrice(discount.finalPrice)}`}>
+              <>
+                <span className="text-2xl font-bold text-gray-900">
                   {formatPrice(discount.finalPrice)}
                 </span>
-                <span className="text-sm text-gray-500 line-through" aria-label={`Original price ${formatPrice(book.price)}`}>
+                <span className="text-lg text-gray-500 line-through">
                   {formatPrice(book.price)}
                 </span>
-              </div>
+              </>
             ) : (
-              <span className="text-lg font-bold text-gray-900" aria-label={`Price ${formatPrice(book.price)}`}>
+              <span className="text-2xl font-bold text-gray-900">
                 {formatPrice(book.price)}
               </span>
             )}
@@ -467,40 +454,33 @@ export function BookCard({
             <button
               onClick={handleAddToCart}
               disabled={isAddingToCart || book.stock === 0}
-              className={`w-full py-2.5 px-3 rounded-lg font-medium transition-all duration-300 flex items-center justify-center space-x-2 focus:ring-2 focus:ring-blue-300 focus:outline-none disabled:cursor-not-allowed text-sm mt-auto ${
+              className={`w-full py-3.5 px-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 mt-auto ${
                 isInCartItem
-                  ? 'bg-green-100 text-green-800 border border-green-300'
+                  ? 'bg-emerald-100 text-emerald-800 border-2 border-emerald-300'
                   : book.stock === 0
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50'
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 hover:shadow-xl'
               }`}
-              aria-label={
-                book.stock === 0 
-                  ? `${book.title} is out of stock`
-                  : isInCartItem 
-                  ? `${book.title} is in cart (${cartQuantity} items)`
-                  : `Add ${book.title} to cart`
-              }
             >
               {isAddingToCart ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" aria-hidden="true"></div>
-                  <span>Adding...</span>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                  <span>{t('loading')}</span>
                 </>
               ) : isInCartItem ? (
                 <>
-                  <FontAwesomeIcon icon={faShoppingCart} className="w-4 h-4" aria-hidden="true" />
-                  <span>In Cart ({cartQuantity})</span>
+                  <FontAwesomeIcon icon={faCheck} className="w-5 h-5" />
+                  <span>{t('in_cart')}({cartQuantity})</span>
                 </>
               ) : book.stock === 0 ? (
                 <>
-                  <FontAwesomeIcon icon={faShoppingCart} className="w-4 h-4" aria-hidden="true" />
-                  <span>Out of Stock</span>
+                  <FontAwesomeIcon icon={faCalendar} className="w-5 h-5" />
+                  <span>{t('out_of_stock')}</span>
                 </>
               ) : (
                 <>
-                  <FontAwesomeIcon icon={faShoppingCart} className="w-4 h-4" aria-hidden="true" />
-                  <span>Add to Cart</span>
+                  <FontAwesomeIcon icon={faShoppingCart} className="w-5 h-5" />
+                  <span>{t('add_to_cart')}</span>
                 </>
               )}
             </button>
@@ -508,19 +488,13 @@ export function BookCard({
 
           {/* Stock Status */}
           {book.stock <= 5 && book.stock > 0 && (
-            <p className="text-xs text-orange-600 mt-2" role="alert" aria-live="polite">
-              Only {book.stock} left in stock
-            </p>
-          )}
-          {book.stock === 0 && (
-            <p className="text-xs text-red-600 mt-2" role="alert" aria-live="polite">
-              Out of stock
+            <p className="text-sm text-amber-600 font-medium text-center">
+              {t('only_stock_left', { stock: book.stock })}
             </p>
           )}
         </div>
       </article>
 
-      {/* Quick Preview Modal */}
       <QuickPreviewModal
         isOpen={showPreview}
         onClose={() => setShowPreview(false)}
@@ -530,46 +504,28 @@ export function BookCard({
   );
 }
 
-// Skeleton loading component for book cards
-export function CardSkeleton({ viewMode = 'grid', count }) {
-  // Determine how many skeleton cards to show based on viewport
-  const getColumnsForWidth = (width) => {
-    if (width >= 1536) return 6; // 2xl
-    if (width >= 1280) return 5; // xl
-    if (width >= 1024) return 4; // lg
-    if (width >= 640) return 3;  // sm
-    return 2;                    // base
-  };
-
-  let computedCount = count;
-  if (!computedCount) {
-    try {
-      const cols = getColumnsForWidth(typeof window !== 'undefined' ? window.innerWidth : 1024);
-      const rows = viewMode === 'list' ? 6 : 2; // more items for list, 2 rows for cards
-      computedCount = cols * rows;
-    } catch (e) {
-      computedCount = viewMode === 'list' ? 6 : 8; // safe fallback
-    }
-  }
-
+// Premium Skeleton Component
+export function CardSkeleton({ viewMode = 'grid', count = 8 }) {
   if (viewMode === 'list') {
     return (
-      <div className="space-y-3">
-        {[...Array(computedCount)].map((_, idx) => (
-          <article key={idx} className="bg-white rounded-xl shadow-md flex animate-pulse">
-            <div className="w-32 h-48 bg-gray-300 rounded-l-xl flex-shrink-0"></div>
-            <div className="flex-1 p-4 space-y-3">
-              <div className="h-6 bg-gray-300 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-300 rounded w-1/2"></div>
-              <div className="h-3 bg-gray-300 rounded w-full"></div>
-              <div className="h-3 bg-gray-300 rounded w-2/3"></div>
-              <div className="flex items-center justify-between mt-4">
-                <div className="flex space-x-1">
+      <div className="space-y-4">
+        {[...Array(count)].map((_, idx) => (
+          <article key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-100 flex animate-pulse">
+            <div className="w-28 h-36 bg-gray-200 rounded-l-2xl flex-shrink-0" />
+            <div className="flex-1 p-6 space-y-4">
+              <div className="space-y-2">
+                <div className="h-6 bg-gray-200 rounded w-3/4" />
+                <div className="h-4 bg-gray-200 rounded w-1/2" />
+              </div>
+              <div className="h-4 bg-gray-200 rounded w-full" />
+              <div className="h-4 bg-gray-200 rounded w-2/3" />
+              <div className="flex items-center justify-between">
+                <div className="flex gap-1">
                   {[...Array(5)].map((_, i) => (
-                    <div key={i} className="w-4 h-4 bg-gray-300 rounded"></div>
+                    <div key={i} className="w-5 h-5 bg-gray-200 rounded" />
                   ))}
                 </div>
-                <div className="h-6 bg-gray-300 rounded w-16"></div>
+                <div className="h-8 bg-gray-200 rounded w-24" />
               </div>
             </div>
           </article>
@@ -581,15 +537,15 @@ export function CardSkeleton({ viewMode = 'grid', count }) {
   if (viewMode === 'compact') {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-        {[...Array(computedCount)].map((_, idx) => (
-          <article key={idx} className="bg-white rounded-lg shadow-sm animate-pulse">
-            <div className="h-32 bg-gray-300 rounded-t-lg"></div>
-            <div className="p-2 space-y-2">
-              <div className="h-3 bg-gray-300 rounded w-full"></div>
-              <div className="h-3 bg-gray-300 rounded w-2/3"></div>
-              <div className="flex justify-between items-center">
-                <div className="h-4 bg-gray-300 rounded w-12"></div>
-                <div className="h-3 bg-gray-300 rounded w-10"></div>
+        {[...Array(count)].map((_, idx) => (
+          <article key={idx} className="bg-white rounded-xl shadow-sm border border-gray-100 animate-pulse">
+            <div className="h-40 bg-gray-200 rounded-t-xl" />
+            <div className="p-3 space-y-2">
+              <div className="h-4 bg-gray-200 rounded w-full" />
+              <div className="h-3 bg-gray-200 rounded w-2/3" />
+              <div className="flex justify-between">
+                <div className="h-4 bg-gray-200 rounded w-12" />
+                <div className="h-3 bg-gray-200 rounded w-10" />
               </div>
             </div>
           </article>
@@ -598,20 +554,24 @@ export function CardSkeleton({ viewMode = 'grid', count }) {
     );
   }
 
-  // Default grid view skeleton
+  // Grid View Skeleton
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-      {[...Array(computedCount)].map((_, idx) => (
-        <article key={idx} className="bg-white rounded-xl shadow-md h-full flex flex-col animate-pulse">
-          <div className="h-48 sm:h-52 lg:h-56 bg-gray-300 rounded-t-xl flex-shrink-0"></div>
-          <div className="p-4 flex flex-col flex-grow space-y-3">
-            <div className="h-4 bg-gray-300 rounded w-full"></div>
-            <div className="h-3 bg-gray-300 rounded w-2/3"></div>
-            <div className="flex items-center space-x-2">
-              <div className="h-3 bg-gray-300 rounded w-16"></div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {[...Array(count)].map((_, idx) => (
+        <article key={idx} className="bg-white rounded-2xl shadow-lg border border-gray-100 h-full flex flex-col animate-pulse">
+          <div className="aspect-[3/4] bg-gray-200 rounded-t-2xl" />
+          <div className="p-6 flex flex-col flex-grow space-y-4">
+            <div className="space-y-2">
+              <div className="h-6 bg-gray-200 rounded w-3/4" />
+              <div className="h-4 bg-gray-200 rounded w-1/2" />
             </div>
-            <div className="h-5 bg-gray-300 rounded w-16"></div>
-            <div className="h-10 bg-gray-300 rounded w-full mt-auto"></div>
+            <div className="flex gap-1">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="w-5 h-5 bg-gray-200 rounded" />
+              ))}
+            </div>
+            <div className="h-6 bg-gray-200 rounded w-20" />
+            <div className="h-12 bg-gray-200 rounded w-full mt-auto" />
           </div>
         </article>
       ))}
