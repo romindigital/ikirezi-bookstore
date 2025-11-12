@@ -52,7 +52,8 @@ export function MobileFilterSheet({
       category: '',
       priceRange: '',
       sortBy: 'popular',
-      search: ''
+      search: '',
+      minRating: ''
     };
     setLocalFilters(clearedFilters);
   };
@@ -171,6 +172,29 @@ export function MobileFilterSheet({
                   </div>
                 </div>
               )}
+
+              {/* Rating Filter */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <FontAwesomeIcon icon={faStar} className="w-4 h-4 text-emerald-600" />
+                  {t('common.minimum_rating') || 'Minimum Rating'}
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {[4.0, 4.5, 4.8, 5.0].map((rating) => (
+                    <button
+                      key={rating}
+                      onClick={() => handleFilterChange('minRating', rating.toString())}
+                      className={`p-3 rounded-xl text-sm font-medium transition-all ${
+                        localFilters.minRating === rating.toString()
+                          ? 'bg-emerald-600 text-white shadow-lg'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {rating}★+
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 

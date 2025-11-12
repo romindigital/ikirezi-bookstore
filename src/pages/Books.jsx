@@ -17,6 +17,64 @@ import {
   AlertCircle, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
+// Custom hook for horizontal scroll with drag functionality
+const useHorizontalScroll = () => {
+  const scrollRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = useCallback((e) => {
+    if (!scrollRef.current) return;
+    
+    setIsDragging(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+    e.preventDefault();
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const handleMouseMove = useCallback((e) => {
+    if (!isDragging || !scrollRef.current) return;
+    
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2; // Scroll speed
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  }, [isDragging, startX, scrollLeft]);
+
+  // Add button navigation
+  const scrollLeftHandler = useCallback(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+    }
+  }, []);
+
+  const scrollRightHandler = useCallback(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+    }
+  }, []);
+
+  return {
+    scrollRef,
+    isDragging,
+    handleMouseDown,
+    handleMouseLeave,
+    handleMouseUp,
+    handleMouseMove,
+    scrollLeftHandler,
+    scrollRightHandler
+  };
+};
+
 // Empty State Component
 const EmptyState = ({ searchQuery, selectedCategory, onClearFilters }) => (
   <div className="text-center py-16 px-4">
@@ -134,6 +192,14 @@ const SORT_OPTIONS = [
   { value: 'title', label: 'Title A-Z', icon: BookOpen },
   { value: 'author', label: 'Author A-Z', icon: User },
 ];
+const PRICE_RANGES = [
+  { value: '', label: 'Any Price' },
+  { value: '0-10', label: '$0 - $10' },
+  { value: '10-20', label: '$10 - $20' },
+  { value: '20-30', label: '$20 - $30' },
+  { value: '30-50', label: '$30 - $50' },
+  { value: '50', label: '$50+' },
+];
 
 // Custom Carousel with Loop - Limited to 20 books per row
 const LoopCarousel = ({ books, title, subtitle, onAddToCart, categorySlug }) => {
@@ -185,15 +251,24 @@ export function Books() {
   const searchQuery = searchParams.get('q') || '';
   const selectedCategory = searchParams.get('category') || '';
   const priceRange = searchParams.get('price') || '';
+  const minRating = searchParams.get('rating') || '';
 
   // Local State
   const [showFilters, setShowFilters] = useState(false);
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [isDesktop, setIsDesktop] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-  const scrollRef = useRef(null);
+
+  // Use the horizontal scroll hook
+  const {
+    scrollRef,
+    isDragging,
+    handleMouseDown,
+    handleMouseLeave,
+    handleMouseUp,
+    handleMouseMove,
+    scrollLeftHandler,
+    scrollRightHandler
+  } = useHorizontalScroll();
 
   const debouncedSearchQuery = useDebounce(searchInput, 300);
 
@@ -203,7 +278,8 @@ export function Books() {
     selectedCategory,
     sortBy,
     priceRange,
-  }), [debouncedSearchQuery, selectedCategory, sortBy, priceRange]);
+    minRating: minRating ? parseFloat(minRating) : null,
+  }), [debouncedSearchQuery, selectedCategory, sortBy, priceRange, minRating]);
 
   // Update search input when URL changes
   useEffect(() => {
@@ -247,7 +323,6 @@ export function Books() {
     return buckets.slice(0, 6);
   }, [books]);
 
-
   // Handlers
   const handleUpdateSearchParams = (key, value, removeIfEmpty = true) => {
     setSearchParams(prev => {
@@ -261,33 +336,20 @@ export function Books() {
     }, { replace: true });
   };
 
-  // Drag handlers for smooth scrolling
-  const handleMouseDown = (e) => {
-    setIsDragging(true);
-    setStartX(e.pageX - scrollRef.current.offsetLeft);
-    setScrollLeft(scrollRef.current.scrollLeft);
-  };
-
-  const handleMouseLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const x = e.pageX - scrollRef.current.offsetLeft;
-    const walk = (x - startX) * 2; // Scroll speed multiplier
-    scrollRef.current.scrollLeft = scrollLeft - walk;
-  };
-  
   const handleSearch = (query) => {
     setSearchInput(query);
     handleUpdateSearchParams('q', query);
     trackInteraction('search', 'books_search', query);
+  };
+
+  const handlePriceRangeChange = (range) => {
+    handleUpdateSearchParams('price', range);
+    trackInteraction('filter', 'price_range_filter', range);
+  };
+
+  const handleRatingChange = (rating) => {
+    handleUpdateSearchParams('rating', rating);
+    trackInteraction('filter', 'rating_filter', rating);
   };
 
   const handleCategoryChange = (category) => {
@@ -299,7 +361,6 @@ export function Books() {
     handleUpdateSearchParams('sort', value);
     trackInteraction('sort', 'books_sort', value);
   };
-
 
   const handleAddToCart = (book) => {
     addToCart(book);
@@ -338,21 +399,6 @@ export function Books() {
     if (selectedCategory) return `Discover the best ${selectedCategory.toLowerCase()} books. Curated selection with reviews and ratings.`;
     return `Browse our collection of ${totalItems} books. Find bestsellers, new releases, and exclusive titles with free shipping.`;
   }, [searchQuery, selectedCategory, totalItems]);
-
-  // if (isLoading) {
-  //   return (
-  //     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50/30">
-  //       <SEOHead title={t('common.loading')} />
-  //       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-  //         <div className="text-center mb-12">
-  //           <h1 className="text-4xl font-bold text-gray-900 mb-4">{t('home.title')}</h1>
-  //           <p className="text-xl text-gray-600">{t('common.loading')}</p>
-  //         </div>
-  //         {/* <CardSkeleton count={12} viewMode={viewMode} /> */}
-  //       </div>
-  //     </main>
-  //   );
-  // }
 
   if (error && books.length === 0) {
     return (
@@ -396,9 +442,7 @@ export function Books() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
           {/* Dynamic Hero Section with Categories */}
           <div className="relative rounded-3xl overflow-hidden mb-8" style={{
-            background: 'linear-gradient(-45deg, #ecfdf5, #f0fdf4, #dcfce7, #bbf7d0, #a7f3d0, #6ee7b7)',
             backgroundSize: '400% 400%',
-            // animation: 'gradientShift 15s ease infinite'
           }}>
             {/* Animated Background Pattern */}
             <div className="absolute inset-0 opacity-10">
@@ -463,12 +507,18 @@ export function Books() {
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold text-gray-900 text-sm" style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}>Browse by Category</h3>
                     <div className="flex items-center gap-2">
-                      <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                      <button 
+                        onClick={scrollLeftHandler}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
                         <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                       </button>
-                      <button className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                      <button 
+                        onClick={scrollRightHandler}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
                         <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
@@ -476,16 +526,18 @@ export function Books() {
                     </div>
                   </div>
 
-                  {/* Horizontal Category Cards - Draggable Scroll */}
+                  {/* Horizontal Category Cards - Swiper-like Draggable Scroll */}
                   <div className="relative">
                     <div className="overflow-hidden">
                       <div
                         ref={scrollRef}
-                        className={`flex gap-4 pb-2 select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                        className={`flex gap-4 pb-2 select-none overflow-x-auto scroll-smooth ${
+                          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+                        }`}
                         style={{
-                          scrollBehavior: 'smooth',
                           scrollbarWidth: 'none',
-                          msOverflowStyle: 'none'
+                          msOverflowStyle: 'none',
+                          WebkitOverflowScrolling: 'touch'
                         }}
                         onMouseDown={handleMouseDown}
                         onMouseLeave={handleMouseLeave}
@@ -496,21 +548,25 @@ export function Books() {
                           <button
                             key={category}
                             onClick={() => handleCategoryChange(category)}
-                            className={`flex-shrink-0 flex items-center gap-3 px-6 py-4 rounded-xl border transition-all duration-200 min-w-0 ${
-                              selectedCategory === (category === 'All' ? '' : category)
+                            className={`flex-shrink-0 flex items-center gap-3 px-6 py-4 rounded-xl border transition-all duration-200 ${
+                              selectedCategory === category || (category === 'All' && !selectedCategory)
                                 ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
                                 : 'bg-white text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50'
                             }`}
-                            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', minWidth: '180px' }}
+                            style={{ 
+                              fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif', 
+                              minWidth: '180px',
+                              flex: '0 0 auto'
+                            }}
                           >
                             {/* Category Icon */}
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                              selectedCategory === (category === 'All' ? '' : category)
+                              selectedCategory === category || (category === 'All' && !selectedCategory)
                                 ? 'bg-white/20'
                                 : 'bg-emerald-100'
                             }`}>
                               <span className={`text-sm ${
-                                selectedCategory === (category === 'All' ? '' : category)
+                                selectedCategory === category || (category === 'All' && !selectedCategory)
                                   ? 'text-white'
                                   : 'text-emerald-600'
                               }`}>
@@ -526,16 +582,16 @@ export function Books() {
                             </div>
 
                             {/* Category Text */}
-                            <div className="text-left min-w-0">
+                            <div className="text-left min-w-0 flex-1">
                               <div className={`text-sm font-medium truncate ${
-                                selectedCategory === (category === 'All' ? '' : category)
+                                selectedCategory === category || (category === 'All' && !selectedCategory)
                                   ? 'text-white'
                                   : 'text-gray-900'
                               }`}>
                                 {category}
                               </div>
                               <div className={`text-xs ${
-                                selectedCategory === (category === 'All' ? '' : category)
+                                selectedCategory === category || (category === 'All' && !selectedCategory)
                                   ? 'text-white/80'
                                   : 'text-gray-500'
                               }`}>
@@ -547,14 +603,24 @@ export function Books() {
                       </div>
                     </div>
 
-                    {/* Custom Scrollbar Styling */}
+                    {/* Custom Scrollbar Styling - Hidden */}
                     <style jsx>{`
-                      div::-webkit-scrollbar {
+                      .overflow-x-auto::-webkit-scrollbar {
                         display: none;
                       }
-                      div {
+                      .overflow-x-auto {
                         -ms-overflow-style: none;
                         scrollbar-width: none;
+                      }
+
+                      /* Smooth momentum scrolling for WebKit */
+                      .overflow-x-auto {
+                        -webkit-overflow-scrolling: touch;
+                      }
+
+                      /* Enhanced drag feedback */
+                      .cursor-grab:active {
+                        cursor: grabbing;
                       }
                     `}</style>
                   </div>
@@ -596,8 +662,6 @@ export function Books() {
                 </div>
               </div>
 
-              
-
               {/* Books Content */}
               {books.length === 0 ? (
                 <EmptyState 
@@ -631,8 +695,6 @@ export function Books() {
                       />
                     );
                   })}
-
-
                 </div>
               )}
             </section>
@@ -647,17 +709,51 @@ export function Books() {
               category: selectedCategory,
               search: searchQuery,
               sortBy: sortBy,
-              priceRange: priceRange
+              priceRange: priceRange,
+              minRating: minRating
             }}
             onFiltersChange={(newFilters) => {
               handleCategoryChange(newFilters.category || '');
               handleSearch(newFilters.search || '');
               handleSortChange(newFilters.sortBy || 'popular');
+              handlePriceRangeChange(newFilters.priceRange || '');
+              handleRatingChange(newFilters.minRating || '');
             }}
             categories={CATEGORIES}
+            priceRanges={PRICE_RANGES}
             sortOptions={SORT_OPTIONS}
           />
         )}
+
+        {/* Global Styles for Animations */}
+        <style jsx global>{`
+          @keyframes patternMove {
+            0% {
+              transform: translate(0, 0);
+            }
+            100% {
+              transform: translate(25px, 25px);
+            }
+          }
+
+          @keyframes textGlow {
+            0% {
+              text-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+            }
+            100% {
+              text-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
+            }
+          }
+
+          @keyframes colorShift {
+            0%, 100% {
+              color: #059669;
+            }
+            50% {
+              color: #10b981;
+            }
+          }
+        `}</style>
       </main>
     </>
   );

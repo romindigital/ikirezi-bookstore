@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -107,21 +108,19 @@ export function Analytics() {
       currency: 'USD'
     }).format(amount);
   };
-
   const formatNumber = (num) => {
     return new Intl.NumberFormat('en-US').format(num);
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex flex-col space-y-2 items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-t-2 border-emerald-600"></div>
+        <p>Loading...</p>
       </div>
     );
   }
-
   return (
-    <AdminLayout>
       <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -329,6 +328,5 @@ export function Analytics() {
         </div>
       </div>
       </div>
-    </AdminLayout>
   );
 }

@@ -251,7 +251,12 @@ export function AdminDashboard() {
   );
 
   if (loading) {
-    return <LoadingSpinner size="xl" text="Loading dashboard..." className="min-h-screen" />;
+    return (
+      <div className="min-h-screen flex items-center flex-col space-y-2 justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-t-2 border-emerald-600"></div>
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   return (
@@ -373,140 +378,6 @@ export function AdminDashboard() {
                 </div>
               </div>
             </div>
-
-            {/* Books Management */}
-            <div className="mt-8">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">Books Management</h3>
-                  <div className="flex items-center space-x-4">
-                    <div className="relative">
-                      <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                      <input
-                        type="text"
-                        placeholder="Search books..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
-                      />
-                    </div>
-                    <button
-                      onClick={() => setIsUploadModalOpen(true)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2 transition-colors"
-                    >
-                      <FontAwesomeIcon icon={faUpload} className="w-4 h-4" />
-                      <span>Upload Book</span>
-                    </button>
-                  </div>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Book
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Author
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Category
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Price
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Stock
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Sales
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Rating
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredBooks.map((book) => (
-                        <tr key={book.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="w-12 h-16 bg-gray-200 rounded-lg flex-shrink-0 mr-4">
-                                <img 
-                                  src={book.coverImage} 
-                                  alt={book.title}
-                                  className="w-full h-full object-cover rounded-lg"
-                                />
-                              </div>
-                              <div>
-                                <div className="text-sm font-medium text-gray-900">{book.title}</div>
-                                <div className="text-sm text-gray-500">ISBN: {book.isbn || 'N/A'}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {book.author}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                              {book.category}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${book.price}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <span className={`text-sm font-medium ${
-                                book.stock === 0 ? 'text-red-600' : 
-                                book.stock < 10 ? 'text-yellow-600' : 'text-green-600'
-                              }`}>
-                                {book.stock}
-                              </span>
-                              {book.stock === 0 && (
-                                <FontAwesomeIcon icon={faExclamationCircle} className="w-4 h-4 text-red-500 ml-1" />
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {book.sales}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <FontAwesomeIcon icon={faStar} className="w-4 h-4 text-yellow-400 mr-1" />
-                              <span className="text-sm text-gray-900">{book.rating}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div className="flex space-x-2">
-                              <button className="text-blue-600 hover:text-blue-900 p-1 rounded">
-                                <FontAwesomeIcon icon={faEye} className="w-4 h-4" />
-                              </button>
-                              <button className="text-indigo-600 hover:text-indigo-900 p-1 rounded">
-                                <FontAwesomeIcon icon={faEdit} className="w-4 h-4" />
-                              </button>
-                              <button className="text-red-600 hover:text-red-900 p-1 rounded">
-                                <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-      {/* Upload Modal */}
-      <BookUploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        onSave={handleBookUpload}
-      />
     </>
   );
 }

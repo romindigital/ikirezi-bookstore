@@ -236,7 +236,7 @@ export const PremiumCarousel = ({
                 swiper.navigation.init();
                 swiper.navigation.update();
               }
-            });
+            }, 100);
           }}
           className="px-2 py-4"
         >

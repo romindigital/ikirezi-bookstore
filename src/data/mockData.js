@@ -461,10 +461,12 @@ export const mockApi = {
     
     if (params.search) {
       const searchTerm = params.search.toLowerCase();
-      books = books.filter(book => 
+      books = books.filter(book =>
         book.title.toLowerCase().includes(searchTerm) ||
         book.author.toLowerCase().includes(searchTerm) ||
-        book.categories.some(cat => cat.toLowerCase().includes(searchTerm))
+        book.categories.some(cat => cat.toLowerCase().includes(searchTerm)) ||
+        book.description.toLowerCase().includes(searchTerm) ||
+        book.publisher.toLowerCase().includes(searchTerm)
       );
     }
     
@@ -476,10 +478,60 @@ export const mockApi = {
       books = books.sort((a, b) => b.reviewCount - a.reviewCount);
     }
     
+    // Price range filter
+    if (params.priceRange) {
+      const [min, max] = params.priceRange.split('-').map(p => parseFloat(p));
+      if (max) {
+        books = books.filter(book => {
+          const price = book.discountPrice || book.price;
+          return price >= min && price <= max;
+        });
+      } else {
+        // Handle "50+" case
+        books = books.filter(book => {
+          const price = book.discountPrice || book.price;
+          return price >= min;
+        });
+      }
+    }
+
+    // Rating filter
+    if (params.minRating) {
+      books = books.filter(book => book.rating >= params.minRating);
+    }
+
+    // Sorting
+    if (params.sortBy) {
+      switch (params.sortBy) {
+        case 'price-low':
+          books.sort((a, b) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
+          break;
+        case 'price-high':
+          books.sort((a, b) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
+          break;
+        case 'rating':
+          books.sort((a, b) => b.rating - a.rating);
+          break;
+        case 'newest':
+          books.sort((a, b) => b.publishedYear - a.publishedYear);
+          break;
+        case 'title':
+          books.sort((a, b) => a.title.localeCompare(b.title));
+          break;
+        case 'author':
+          books.sort((a, b) => a.author.localeCompare(b.author));
+          break;
+        case 'popular':
+        default:
+          books.sort((a, b) => b.reviewCount - a.reviewCount);
+          break;
+      }
+    }
+
     if (params.limit) {
       books = books.slice(0, params.limit);
     }
-    
+
     return books;
   },
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { 
   Search, 
   Filter, 
@@ -233,14 +234,14 @@ export function UsersManagement() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex flex-col space-y-2 items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-t-2 border-emerald-600"></div>
+        <p>Loading...</p>
       </div>
     );
   }
 
   return (
-    <AdminLayout>
       <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -253,64 +254,10 @@ export function UsersManagement() {
             <Download className="w-4 h-4" />
             <span>Export</span>
           </button>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2">
+          <button className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 flex items-center space-x-2 translate-all duration-200">
             <Plus className="w-4 h-4" />
             <span>Add User</span>
           </button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <User className="w-6 h-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Users</p>
-              <p className="text-2xl font-bold text-gray-900">{users.length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <User className="w-6 h-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Active Users</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {users.filter(u => u.status === 'active').length}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Shield className="w-6 h-6 text-purple-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Admins</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {users.filter(u => u.role === 'admin').length}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <User className="w-6 h-6 text-orange-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">New This Month</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {users.filter(u => new Date(u.joinDate) > new Date('2024-01-01')).length}
-              </p>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -525,7 +472,7 @@ export function UsersManagement() {
             <button className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">
               Previous
             </button>
-            <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded">
+            <button className="px-3 py-1 text-sm bg-emerald-600 text-white rounded">
               1
             </button>
             <button className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">
@@ -535,6 +482,5 @@ export function UsersManagement() {
         </div>
       </div>
       </div>
-    </AdminLayout>
   );
 }

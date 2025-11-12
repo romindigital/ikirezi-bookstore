@@ -24,10 +24,13 @@ import { UserProfile } from '../pages/UserProfile';
 import { AdminDashboard } from '../pages/AdminDashboard';
 import CategoryPage from '../pages/categories/CategoryPage';
 import { BooksManagement } from '../pages/admin/BooksManagement';
+import { AddBookWizard } from '../pages/admin/AddBookWizard';
 import { UsersManagement } from '../pages/admin/UsersManagement';
 import { Analytics } from '../pages/admin/Analytics';
+import { Reports } from '../pages/admin/Reports';
 import { AdminLayout } from '../components/AdminLayout';
 import { ProtectedRoute } from '../components/ProtectedRoute';
+import { LiveInventory } from '../components/LiveInventory';
 
 function AppRoutes() {
   return (
@@ -76,7 +79,9 @@ function AppRoutes() {
                   <Route
                     path="/orders"
                     element={
-                      <Orders />
+                      <ProtectedRoute>
+                        <Orders />
+                      </ProtectedRoute>
                     }
                   />
                 </Routes>
@@ -103,6 +108,26 @@ function AppRoutes() {
             }
           />
           <Route
+            path="/admin/books/add"
+            element={<AddBookWizard />}
+          />
+          <Route
+            path="/admin/report"
+            element={
+              <AdminLayout>
+                <Reports />
+              </AdminLayout>
+            }
+          />
+          <Route
+            path="/admin/inventory"
+            element={
+              <AdminLayout>
+                <LiveInventory />
+              </AdminLayout>
+            }
+          />
+          <Route
             path="/admin/users"
             element={
               <AdminLayout>
@@ -115,6 +140,14 @@ function AppRoutes() {
             element={
               <AdminLayout>
                 <Analytics />
+              </AdminLayout>
+            }
+          />
+          <Route
+            path="/admin/reports"
+            element={
+              <AdminLayout>
+                <Reports />
               </AdminLayout>
             }
           />

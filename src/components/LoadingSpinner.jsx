@@ -25,11 +25,11 @@ export function LoadingSpinner({
   const getVariantIcon = () => {
     switch (variant) {
       case 'book':
-        return <BookOpen className={`animate-pulse text-blue-600 ${sizeClasses[size]}`} />;
+        return <BookOpen className={`animate-pulse text-green-600 ${sizeClasses[size]}`} />;
       case 'sparkles':
-        return <Sparkles className={`animate-pulse text-purple-600 ${sizeClasses[size]}`} />;
+        return <Sparkles className={`animate-pulse text-green-600 ${sizeClasses[size]}`} />;
       default:
-        return <Loader2 className={`animate-spin text-blue-600 ${sizeClasses[size]}`} />;
+        return <Loader2 className={`animate-spin text-green-600 ${sizeClasses[size]}`} />;
     }
   };
 
@@ -85,13 +85,6 @@ export function LoadingSpinner({
           )}
         </div>
       )}
-
-      {/* Animated Dots */}
-      <div className="flex space-x-1">
-        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-      </div>
     </div>
   );
 }
